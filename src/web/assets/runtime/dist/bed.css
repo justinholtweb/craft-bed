@@ -1,0 +1,120 @@
+/*
+ * Bed — the base stylesheet.
+ *
+ * Inlined into the head rather than linked, because its entire job is to hold space before the
+ * first paint and a render-blocking request to do that would be self-defeating. Everything it
+ * does is driven by two custom properties the server writes: `--bed-ar` for embeds with a known
+ * shape, `--bed-min` for the ones whose height had to be measured.
+ *
+ * Turn off `registerCss` in the plugin settings to own all of this yourself; the markup and the
+ * custom properties stay exactly the same.
+ */
+
+.bed {
+    display: block;
+    position: relative;
+    min-height: var(--bed-min, 0);
+}
+
+/* An embed with a known shape holds its space with a ratio, which needs no measurement at all. */
+.bed--ratio {
+    aspect-ratio: var(--bed-ar, 16 / 9);
+    min-height: 0;
+}
+
+/*
+ * The frame fills the bed. Without this an embed carrying `width="560" height="315"` keeps its
+ * fixed pixel size inside a fluid box, which overflows the moment the column is narrower than
+ * 560px — the exact situation the bed was reserved to avoid.
+ */
+.bed--ratio > iframe,
+.bed--ratio > video,
+.bed--ratio > audio,
+.bed--ratio > .bed-facade {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* Script-driven embeds settle to their own height; the bed only stops the page moving first. */
+.bed--script > * {
+    max-width: 100%;
+}
+
+/* ---------------------------------------------------------------- facades */
+
+.bed-facade {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: block;
+    overflow: hidden;
+    cursor: pointer;
+    background: #0f0f0f;
+    color: inherit;
+    font: inherit;
+}
+
+.bed-facade:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+}
+
+.bed-poster {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /*
+     * A YouTube `hqdefault` thumbnail is 4:3 with black bars baked into the top and bottom. The
+     * scale crops them back off, which is why the poster matches the player rather than sitting
+     * in a letterbox of its own.
+     */
+    transform: scale(1.34);
+}
+
+.bed-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 68px;
+    height: 48px;
+    margin: -24px 0 0 -34px;
+    border-radius: 12px;
+    background: rgba(20, 20, 20, 0.75);
+    transition: background 120ms ease-in-out;
+}
+
+.bed-play::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -10px 0 0 -6px;
+    border-style: solid;
+    border-width: 10px 0 10px 17px;
+    border-color: transparent transparent transparent #fff;
+}
+
+.bed-facade:hover .bed-play,
+.bed-facade:focus-visible .bed-play {
+    background: #f00;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bed-play {
+        transition: none;
+    }
+}
+
+/*
+ * The runtime stamps `data-bed-loaded` once an embed has arrived. There is deliberately no rule
+ * attached to it here: releasing the reserved height at that moment would let a short embed pull
+ * the page back up, and a layout shift is a layout shift whichever direction it goes in. It is a
+ * hook for your own CSS, not a behaviour.
+ */

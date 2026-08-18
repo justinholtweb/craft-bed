@@ -1,0 +1,101 @@
+{% extends "_layouts/cp.twig" %}
+
+{% set title = slot.uri %}
+{% set selectedSubnavItem = 'embeds' %}
+{% set crumbs = [{ label: 'Bed'|t('bed'), url: url('bed/embeds') }] %}
+
+{% block content %}
+    <div class="pane">
+        <h2>{{ provider ? provider.name : slot.provider }}</h2>
+
+        <table class="data fullwidth">
+            <tbody>
+                <tr><th class="thin">{{ 'Page'|t('bed') }}</th><td><code>{{ slot.uri }}</code></td></tr>
+                <tr><th class="thin">{{ 'Position'|t('bed') }}</th><td>{{ 'Embed {n} on the page'|t('bed', { n: slot.position + 1 }) }}</td></tr>
+                <tr><th class="thin">{{ 'Kind'|t('bed') }}</th><td>{{ slot.kind }}</td></tr>
+                {% if slot.sampleSrc %}
+                    <tr><th class="thin">{{ 'Source'|t('bed') }}</th><td><code style="word-break: break-all;">{{ slot.sampleSrc }}</code></td></tr>
+                {% endif %}
+                <tr><th class="thin">{{ 'Samples'|t('bed') }}</th><td>{{ slot.samples }}</td></tr>
+                <tr><th class="thin">{{ 'Last seen'|t('bed') }}</th><td>{{ slot.lastSeen|datetime('short') }}</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pane">
+        <h2>{{ 'What it measured'|t('bed') }}</h2>
+
+        {% if provider and provider.ratio %}
+            <p class="light">
+                {{ 'This provider has a natural shape ({w}:{h}), so its bed is an aspect-ratio box and no height needs measuring.'|t('bed', { w: provider.ratio[0], h: provider.ratio[1] }) }}
+            </p>
+        {% endif %}
+
+        {% if measurements|length %}
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th>{{ 'Viewport'|t('bed') }}</th>
+                        <th class="thin">{{ 'Samples'|t('bed') }}</th>
+                        <th class="thin">{{ 'Mean'|t('bed') }}</th>
+                        <th class="thin">{{ 'Tallest'|t('bed') }}</th>
+                        <th class="thin">{{ 'Above the fold'|t('bed') }}</th>
+                        <th class="thin">{{ 'Reserved'|t('bed') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in measurements %}
+                        {% set mean = row.samples > 0 ? (row.heightSum / row.samples)|round : 0 %}
+                        {% set share = row.samples > 0 ? (row.aboveFold / row.samples * 100)|round : 0 %}
+                        <tr>
+                            <td><code>≤ {{ row.breakpoint }}px</code></td>
+                            <td class="thin">
+                                {{ row.samples }}
+                                {% if row.samples < sampleTarget %}
+                                    <span class="light">/ {{ sampleTarget }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="thin">{{ mean }}px</td>
+                            <td class="thin">{{ row.heightMax }}px</td>
+                            <td class="thin">{{ share }}%</td>
+                            <td class="thin"><strong>{{ strategy == 'max' ? row.heightMax : mean }}px</strong></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <p class="light" style="margin-top: 12px;">
+                {{ 'Reserved space comes from the {strategy}. An embed measured inside the first screenful at any width is loaded eagerly at every width — loading something below the fold early costs a little bandwidth, and lazy-loading the thing at the top of the page costs the Largest Contentful Paint.'|t('bed', {
+                    strategy: strategy == 'max' ? 'tallest measurement'|t('bed') : 'mean measurement'|t('bed'),
+                }) }}
+            </p>
+        {% else %}
+            <p class="light">{{ 'No measurements yet. They arrive from sampled page views.'|t('bed') }}</p>
+        {% endif %}
+    </div>
+
+    {% if siblings|length %}
+        <div class="pane">
+            <h2>{{ 'The same embed elsewhere'|t('bed') }}</h2>
+            <table class="data fullwidth">
+                <tbody>
+                    {% for sibling in siblings %}
+                        <tr>
+                            <td><a href="{{ url('bed/embeds/' ~ sibling.id) }}"><code>{{ sibling.uri }}</code></a> <span class="light">#{{ sibling.position + 1 }}</span></td>
+                            <td class="thin light">{{ sibling.samples }} {{ 'samples'|t('bed') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {% if canManage %}
+        <form method="post" accept-charset="UTF-8">
+            {{ csrfInput() }}
+            {{ actionInput('bed/embeds/delete') }}
+            {{ hiddenInput('slotId', slot.id) }}
+            <button type="submit" class="btn" data-icon="trash">{{ 'Clear these measurements'|t('bed') }}</button>
+        </form>
+    {% endif %}
+{% endblock %}

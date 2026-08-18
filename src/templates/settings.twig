@@ -1,0 +1,307 @@
+{% import "_includes/forms.twig" as forms %}
+
+{#
+    Bed's settings.
+
+    Grouped by the four things Bed actually does, because that is how somebody decides whether to
+    turn one of them off. The measurement settings are last: they are the ones with a database
+    behind them, and the ones worth reading before changing.
+#}
+
+{{ forms.lightswitchField({
+    label: 'Enabled'|t('bed'),
+    instructions: 'The master switch. Off means no rewriting, no measuring, and the `|bed` filter returns its input untouched. Nothing already measured is thrown away.'|t('bed'),
+    id: 'enabled',
+    name: 'enabled',
+    on: settings.enabled,
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Optimise front-end pages automatically'|t('bed'),
+    instructions: 'Rewrite embeds in every front-end HTML response. Turn this off to opt in field by field with `{{ entry.body|bed }}` instead.'|t('bed'),
+    id: 'autoOptimize',
+    name: 'autoOptimize',
+    on: settings.autoOptimize,
+}) }}
+
+<hr>
+
+<h2>{{ 'Reserving space'|t('bed') }}</h2>
+
+<p class="light">{{ 'An embed that arrives after the page has been painted pushes everything under it down the screen. Holding its space in advance is the single biggest thing Bed does — and the only part that needs measurements.'|t('bed') }}</p>
+
+{{ forms.lightswitchField({
+    label: 'Reserve space'|t('bed'),
+    instructions: 'Wrap each embed in a box that holds its height before it loads.'|t('bed'),
+    id: 'reserveSpace',
+    name: 'reserveSpace',
+    on: settings.reserveSpace,
+}) }}
+
+{{ forms.selectField({
+    label: 'Reserved height'|t('bed'),
+    instructions: 'Which measurement becomes the reserved height. The mean shifts a little in both directions and is the better default; the maximum never lets the page jump upwards but leaves whitespace under embeds that turn out short.'|t('bed'),
+    id: 'reserveStrategy',
+    name: 'reserveStrategy',
+    value: settings.reserveStrategy,
+    options: [
+        { value: 'mean', label: 'Mean of what was measured'|t('bed') },
+        { value: 'max', label: 'Tallest ever measured'|t('bed') },
+    ],
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Use the embed’s own dimensions'|t('bed'),
+    instructions: 'Build the box from an embed’s `width` and `height` attributes when it has them. This costs nothing and needs no measurements at all.'|t('bed'),
+    id: 'useIntrinsicRatio',
+    name: 'useIntrinsicRatio',
+    on: settings.useIntrinsicRatio,
+}) }}
+
+<hr>
+
+<h2>{{ 'Deferring loads'|t('bed') }}</h2>
+
+{{ forms.lightswitchField({
+    label: 'Lazy-load frames and media'|t('bed'),
+    instructions: 'Add `loading="lazy"` to frames and `preload="none"` to video and audio that are not near the top of the page.'|t('bed'),
+    id: 'lazyLoad',
+    name: 'lazyLoad',
+    on: settings.lazyLoad,
+}) }}
+
+{{ forms.textField({
+    label: 'Always load the first'|t('bed'),
+    instructions: 'How many embeds from the top of the document are left eager whatever the measurements say. The embed at the top of an article is very often the reason somebody opened the page, and lazy-loading it delays the Largest Contentful Paint.'|t('bed'),
+    id: 'eagerCount',
+    name: 'eagerCount',
+    value: settings.eagerCount,
+    size: 4,
+    type: 'number',
+    errors: settings.getErrors('eagerCount'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Defer embed scripts'|t('bed'),
+    instructions: 'Lift a tweet’s, TikTok’s or Instagram post’s loader script out of the document and inject it when the embed nears the viewport. Needs the runtime below.'|t('bed'),
+    id: 'deferScripts',
+    name: 'deferScripts',
+    on: settings.deferScripts,
+}) }}
+
+{{ forms.textField({
+    label: 'Start loading this far ahead'|t('bed'),
+    instructions: 'How far before the viewport a deferred script starts loading.'|t('bed'),
+    id: 'scriptRootMargin',
+    name: 'scriptRootMargin',
+    value: settings.scriptRootMargin,
+    size: 8,
+    errors: settings.getErrors('scriptRootMargin'),
+}) }}
+
+<hr>
+
+<h2>{{ 'Connections'|t('bed') }}</h2>
+
+<p class="light">{{ 'A preconnect is a DNS lookup, a TCP connection and a TLS handshake opened on spec, held for ten seconds and wasted entirely if the page never uses it. Treat the budget as a budget.'|t('bed') }}</p>
+
+{{ forms.lightswitchField({
+    label: 'Add resource hints'|t('bed'),
+    instructions: 'Warm connections for the providers measured inside the first screenful, and resolve DNS for the rest.'|t('bed'),
+    id: 'resourceHints',
+    name: 'resourceHints',
+    on: settings.resourceHints,
+}) }}
+
+{{ forms.textField({
+    label: 'Most connections per page'|t('bed'),
+    id: 'maxHints',
+    name: 'maxHints',
+    value: settings.maxHints,
+    size: 4,
+    type: 'number',
+    errors: settings.getErrors('maxHints'),
+}) }}
+
+<hr>
+
+<h2>{{ 'Facades'|t('bed') }}</h2>
+
+<p class="light">{{ 'A video player is a document, a few hundred kilobytes of script and a handful of third-party connections, all spent before anybody has decided to watch anything. A facade is one image and a play button, and the real player arrives on the click.'|t('bed') }}</p>
+
+{{ forms.checkboxSelectField({
+    label: 'Use a facade for'|t('bed'),
+    instructions: 'Only providers whose poster image can be worked out without asking them anything are listed here.'|t('bed'),
+    id: 'facadeProviders',
+    name: 'facadeProviders',
+    values: settings.facadeProviders,
+    options: facadeOptions,
+    showAllOption: false,
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Use the provider’s poster image'|t('bed'),
+    instructions: 'Off draws the facade from CSS alone, so a reader who never clicks makes no third-party request at all — plainer to look at, better for privacy.'|t('bed'),
+    id: 'facadePosters',
+    name: 'facadePosters',
+    on: settings.facadePosters,
+}) }}
+
+<hr>
+
+<h2>{{ 'Measurement'|t('bed') }}</h2>
+
+<p class="light">{{ 'Reserving space for an embed whose height nobody knows is guesswork. Bed asks a sampled fraction of real visitors what the embed actually measured at their viewport width, and reserves that from then on. Nothing about a visitor is stored — a row is a count, a sum and a maximum.'|t('bed') }}</p>
+
+{% if stats.slots %}
+    <p>
+        {{ 'Tracking {slots} embeds, {measured} of them measured, from {samples} samples.'|t('bed', {
+            slots: stats.slots|number_format,
+            measured: stats.measured|number_format,
+            samples: stats.samples|number_format,
+        }) }}
+        <a href="{{ url('bed/embeds') }}">{{ 'View them'|t('bed') }} &rarr;</a>
+    </p>
+{% endif %}
+
+{% if stats.full %}
+    <p class="warning">{{ 'The ledger has hit its row cap, so no new embeds are being tracked. Raise the cap or prune the stale ones.'|t('bed') }}</p>
+{% endif %}
+
+{{ forms.lightswitchField({
+    label: 'Collect measurements'|t('bed'),
+    instructions: 'Let the runtime report what embeds settled to. Off means every reservation falls back to the provider’s typical height.'|t('bed'),
+    id: 'collectMetrics',
+    name: 'collectMetrics',
+    on: settings.collectMetrics,
+}) }}
+
+{{ forms.textField({
+    label: 'Sample rate'|t('bed'),
+    instructions: 'The fraction of eligible page views that report. `0.1` is one in ten.'|t('bed'),
+    id: 'sampleRate',
+    name: 'sampleRate',
+    value: settings.sampleRate,
+    size: 6,
+    errors: settings.getErrors('sampleRate'),
+}) }}
+
+{{ forms.textField({
+    label: 'Samples wanted'|t('bed'),
+    instructions: 'How many samples an embed needs at one viewport width before Bed stops asking for more.'|t('bed'),
+    id: 'sampleTarget',
+    name: 'sampleTarget',
+    value: settings.sampleTarget,
+    size: 4,
+    type: 'number',
+    errors: settings.getErrors('sampleTarget'),
+}) }}
+
+{{ forms.textField({
+    label: 'Collection token lifetime'|t('bed'),
+    instructions: 'Days a page’s signed collection token stays valid. Longer than you would pick for a session, because the page carrying it may sit in a full-page cache for a while.'|t('bed'),
+    id: 'tokenTtlDays',
+    name: 'tokenTtlDays',
+    value: settings.tokenTtlDays,
+    size: 4,
+    type: 'number',
+    errors: settings.getErrors('tokenTtlDays'),
+}) }}
+
+{{ forms.textField({
+    label: 'Retention'|t('bed'),
+    instructions: 'Days an embed survives without being measured again. Content moves; a measurement of a tweet that was taken off a page last spring is not a measurement of anything.'|t('bed'),
+    id: 'retentionDays',
+    name: 'retentionDays',
+    value: settings.retentionDays,
+    size: 4,
+    type: 'number',
+    errors: settings.getErrors('retentionDays'),
+}) }}
+
+{{ forms.textField({
+    label: 'Row cap'|t('bed'),
+    instructions: 'A hard ceiling on tracked embeds. A site with a million URLs and an embed on each should stop collecting, not fill a disk.'|t('bed'),
+    id: 'maxSlots',
+    name: 'maxSlots',
+    value: settings.maxSlots,
+    size: 8,
+    type: 'number',
+    errors: settings.getErrors('maxSlots'),
+}) }}
+
+{{ forms.textField({
+    label: 'Beacons per minute'|t('bed'),
+    instructions: 'The most reports one address may send in a minute.'|t('bed'),
+    id: 'collectRateLimit',
+    name: 'collectRateLimit',
+    value: settings.collectRateLimit,
+    size: 6,
+    type: 'number',
+    errors: settings.getErrors('collectRateLimit'),
+}) }}
+
+<hr>
+
+<h2>{{ 'Markup and scope'|t('bed') }}</h2>
+
+{{ forms.lightswitchField({
+    label: 'Add missing frame titles'|t('bed'),
+    instructions: 'A frame without a `title` has no accessible name, which is a WCAG failure — and the most common one in embedded content, because the person who pasted the embed never wrote the attribute.'|t('bed'),
+    id: 'addTitles',
+    name: 'addTitles',
+    on: settings.addTitles,
+}) }}
+
+{{ forms.selectField({
+    label: 'Referrer policy'|t('bed'),
+    instructions: 'Applied to frames that do not already have one.'|t('bed'),
+    id: 'referrerPolicy',
+    name: 'referrerPolicy',
+    value: settings.referrerPolicy,
+    options: [
+        { value: '', label: 'Leave alone'|t('bed') },
+        { value: 'no-referrer', label: 'no-referrer' },
+        { value: 'same-origin', label: 'same-origin' },
+        { value: 'strict-origin', label: 'strict-origin' },
+        { value: 'strict-origin-when-cross-origin', label: 'strict-origin-when-cross-origin' },
+        { value: 'origin', label: 'origin' },
+        { value: 'origin-when-cross-origin', label: 'origin-when-cross-origin' },
+        { value: 'unsafe-url', label: 'unsafe-url' },
+    ],
+}) }}
+
+{{ forms.editableTableField({
+    label: 'Never optimise these URIs'|t('bed'),
+    instructions: 'Front-end paths to leave completely alone. `*` matches anything — `checkout/*`, `*.json`.'|t('bed'),
+    id: 'excludeUris',
+    name: 'excludeUris',
+    cols: {
+        value: { heading: 'URI'|t('bed'), type: 'singleline', code: true, placeholder: 'checkout/*' },
+    },
+    rows: settings.excludeUris|map(u => { value: u }),
+    addRowLabel: 'Add a pattern'|t('bed'),
+    allowAdd: true,
+    allowDelete: true,
+    allowReorder: false,
+}) }}
+
+<hr>
+
+<h2>{{ 'Front end'|t('bed') }}</h2>
+
+{{ forms.lightswitchField({
+    label: 'Inline the stylesheet'|t('bed'),
+    instructions: 'Bed’s stylesheet is about a kilobyte and is inlined rather than linked, because its whole job is to hold space before the first paint. Turn it off to style the beds entirely from your own CSS — the markup and the custom properties stay the same.'|t('bed'),
+    id: 'registerCss',
+    name: 'registerCss',
+    on: settings.registerCss,
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Load the runtime'|t('bed'),
+    instructions: 'Without it, deferred scripts and facades are switched off automatically — Bed will not defer something it cannot bring back. Reserved space, lazy frames and resource hints are unaffected, because those are markup and CSS.'|t('bed'),
+    id: 'registerJs',
+    name: 'registerJs',
+    on: settings.registerJs,
+}) }}

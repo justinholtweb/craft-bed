@@ -1,0 +1,84 @@
+{% extends "_layouts/cp.twig" %}
+{% import "_includes/forms.twig" as forms %}
+
+{% set title = 'Embeds'|t('bed') %}
+{% set selectedSubnavItem = 'embeds' %}
+
+{% block actionButton %}
+    {% if canManage and total %}
+        <form method="post" accept-charset="UTF-8" class="inline-block">
+            {{ csrfInput() }}
+            {{ actionInput('bed/embeds/prune') }}
+            <button type="submit" class="btn">{{ 'Prune stale'|t('bed') }}</button>
+        </form>
+        <form method="post" accept-charset="UTF-8" class="inline-block">
+            {{ csrfInput() }}
+            {{ actionInput('bed/embeds/purge') }}
+            <button type="submit" class="btn" data-icon="trash">{{ 'Clear all'|t('bed') }}</button>
+        </form>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if not total %}
+        <div class="zilch">
+            <p>{{ 'Nothing measured yet.'|t('bed') }}</p>
+            <p class="light">{{ 'An embed appears here the first time a sampled visitor reports what it settled to. Until then Bed reserves space from each provider’s typical height, and from the embed’s own dimensions where it has them.'|t('bed') }}</p>
+        </div>
+    {% else %}
+        {% if providerCounts|length > 1 %}
+            <div class="flex" style="margin-bottom: 18px;">
+                <a href="{{ url('bed/embeds') }}" class="btn{{ provider ? '' : ' active' }}">{{ 'All'|t('bed') }}</a>
+                {% for handle, count in providerCounts %}
+                    <a href="{{ url('bed/embeds', { provider: handle }) }}" class="btn{{ provider == handle ? ' active' : '' }}">
+                        {{ handle }} <span class="light">{{ count }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th>{{ 'Page'|t('bed') }}</th>
+                    <th>{{ 'Provider'|t('bed') }}</th>
+                    <th>{{ 'Embed'|t('bed') }}</th>
+                    <th class="thin">{{ 'Samples'|t('bed') }}</th>
+                    <th class="thin">{{ 'Last seen'|t('bed') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for slot in slots %}
+                    <tr>
+                        <td>
+                            <a href="{{ url('bed/embeds/' ~ slot.id) }}"><code>{{ slot.uri }}</code></a>
+                            <span class="light"> #{{ slot.position + 1 }}</span>
+                        </td>
+                        <td>{{ plugin.providers.byHandle(slot.provider).name ?? slot.provider }}</td>
+                        <td class="light"><code>{{ slot.sampleSrc ? slot.sampleSrc|slice(0, 70) : slot.kind }}</code></td>
+                        <td class="thin">
+                            {% if slot.samples %}
+                                {{ slot.samples }}
+                            {% else %}
+                                <span class="light">{{ '—' }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="thin light">{{ slot.lastSeen|datetime('short') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if pages > 1 %}
+            <div class="flex" style="margin-top: 18px;">
+                {% if page > 1 %}
+                    <a class="btn" href="{{ url('bed/embeds', { page: page - 1, provider: provider ?: null }) }}">{{ '← Previous'|t('bed') }}</a>
+                {% endif %}
+                <span class="light">{{ 'Page {page} of {pages}'|t('bed', { page: page, pages: pages }) }}</span>
+                {% if page < pages %}
+                    <a class="btn" href="{{ url('bed/embeds', { page: page + 1, provider: provider ?: null }) }}">{{ 'Next →'|t('bed') }}</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}
