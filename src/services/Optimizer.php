@@ -134,12 +134,14 @@ class Optimizer extends Component
             $collector = null;
         }
 
+        if ($mode !== self::MODE_DOCUMENT) {
+            return $this->injectFragment($html, $collector, $rules, $eagerProviders, $lazyProviders, $settings, $runtimeAvailable);
+        }
+
         $head = $this->head($eagerProviders, $lazyProviders, $rules, $settings, $hasStyle);
         $foot = $this->foot($collector, $runtimeAvailable && !str_contains($html, (string)Runtime::scriptUrl()));
 
-        return $mode === self::MODE_DOCUMENT
-            ? $this->injectDocument($html, $head, $foot)
-            : $this->injectFragment($html, $collector, $rules, $eagerProviders, $lazyProviders, $settings, $runtimeAvailable);
+        return $this->injectDocument($html, $head, $foot);
     }
 
     // ------------------------------------------------------------------ per-embed edits
