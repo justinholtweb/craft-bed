@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linejoin="round">
+  <!--
+    Watermark: the bed drawn as an outline, not as the filled mark.
+
+    Filled, this shape is a 66x26 slab with one small hole in it, and at 1180px across a slide it
+    reads as a hard-edged grey box laid over the artwork rather than as a bed — the same trap as
+    Abacus's frame bars, Awesemo's chest box and Bandage's plaster. Strip the mass, keep the line.
+
+    The pillow stays a stroked rounded rect: in the filled mark it is a hole, and a hole in an
+    outline is just its own outline.
+  -->
+  <rect x="14" y="23" width="10" height="44" rx="5"/>
+  <path d="M20,41 H76 A10,10 0 0 1 86,51 V67 H20 Z"/>
+  <rect x="30" y="46" width="20" height="10" rx="3"/>
+  <rect x="16" y="67" width="9" height="10" rx="3"/>
+  <rect x="76" y="67" width="9" height="10" rx="3"/>
+</svg>

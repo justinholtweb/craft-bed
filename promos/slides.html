@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<!-- handmade: hand-tuned deck -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bed — Plugin Store promos</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #0d0f18;
+    --ink-light: #161a29;
+    --ink-lighter: #212739;
+    --accent: #3B4B9A;
+    --accent-light: #7386DC;
+    --sky: #8FC7E8;
+    --green: #4ade80;
+    --off-white: #f1f2f6;
+  }
+
+  html { background: #000; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--off-white);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- slide shell ---------------------------------------------------- */
+  .slide {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 85% 15%, rgba(59, 75, 154, 0.32) 0%, transparent 40%),
+      radial-gradient(ellipse at 65% 5%,  rgba(115, 134, 220, 0.14) 0%, transparent 35%),
+      radial-gradient(ellipse at 15% 85%, rgba(143, 199, 232, 0.07) 0%, transparent 40%),
+      radial-gradient(ellipse at 35% 95%, rgba(59, 75, 154, 0.10) 0%, transparent 35%),
+      linear-gradient(135deg, #0d0f18 0%, #141829 30%, #181d33 60%, #0d0f18 100%);
+  }
+
+  /* Oversized watermark, echoing the app icon */
+  .slide::after {
+    content: '';
+    position: absolute;
+    top: -14%;
+    left: -12%;
+    width: 1180px;
+    height: 1180px;
+    background: url('assets/watermark.svg') no-repeat center / contain;
+    opacity: 0.05;
+    pointer-events: none;
+  }
+
+  /* Hairline along the top edge */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--sky), var(--accent));
+    z-index: 5;
+  }
+
+  .inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 118px 130px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* ---- type ------------------------------------------------------------ */
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(241, 242, 246, 0.62);
+    margin-bottom: 34px;
+  }
+  .eyebrow .rule {
+    width: 58px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--accent-light);
+  }
+
+  h1, h2 {
+    font-family: 'Jersey 20', sans-serif;
+    font-weight: 400;
+    line-height: 0.9;
+    letter-spacing: 0.005em;
+  }
+
+  .gradient-text {
+    background: linear-gradient(100deg, #5566C4 0%, #7386DC 34%, #8FC7E8 66%, #5566C4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .lede {
+    font-size: 34px;
+    line-height: 1.5;
+    color: rgba(241, 242, 246, 0.72);
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+
+  /* ---- cover slide ----------------------------------------------------- */
+  .cover .inner { gap: 90px; }
+  .cover .copy { flex: 1 1 auto; }
+  .cover h1 { font-size: 320px; margin-bottom: 18px; }
+  .cover .tagline {
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 60px;
+    line-height: 1.02;
+    color: var(--off-white);
+    margin-bottom: 40px;
+    max-width: 15ch;
+  }
+  .cover .lede { max-width: 34ch; font-size: 30px; }
+
+  .cover .mark {
+    flex: 0 0 auto;
+    width: 460px;
+    height: 460px;
+    filter: drop-shadow(14px 14px 0 rgba(0, 0, 0, 0.35));
+  }
+  .cover .mark img { width: 100%; height: 100%; display: block; }
+
+  .badges { display: flex; gap: 16px; margin-top: 52px; }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 26px;
+    font-size: 22px;
+    font-weight: 500;
+    color: rgba(241, 242, 246, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 999px;
+  }
+  .badge .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent-light);
+  }
+  .badge.price .dot { background: var(--sky); }
+
+  /* ---- the guess/measurement statement --------------------------------- */
+  .statement .inner { flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .statement .eyebrow { justify-content: center; }
+  .swap { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 8px; }
+  .swap .caption {
+    font-size: 26px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(241, 242, 246, 0.42);
+  }
+  .swap .before {
+    font-size: 46px;
+    white-space: nowrap;
+    color: rgba(241, 242, 246, 0.34);
+    letter-spacing: 0.01em;
+  }
+  .swap .arrow {
+    width: 4px;
+    height: 62px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, rgba(115, 134, 220, 0.15), var(--accent-light));
+    position: relative;
+  }
+  .swap .arrow::after {
+    content: '';
+    position: absolute;
+    left: 50%; bottom: -4px;
+    width: 18px; height: 18px;
+    transform: translateX(-50%) rotate(45deg);
+    border-right: 4px solid var(--accent-light);
+    border-bottom: 4px solid var(--accent-light);
+    border-radius: 2px;
+  }
+  .swap .after {
+    font-size: 74px;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .statement .lede { margin-top: 40px; max-width: 42ch; font-size: 32px; }
+
+  /* ---- feature slides -------------------------------------------------- */
+  .feature .inner { align-items: center; }
+  .feature .copy { width: 780px; flex: 0 0 780px; }
+  .feature h2 { font-size: 108px; margin-bottom: 30px; }
+  .feature .lede { max-width: 21ch; }
+
+  .points {
+    list-style: none;
+    margin-top: 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .points li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 25px;
+    line-height: 1.4;
+    color: rgba(241, 242, 246, 0.6);
+  }
+  .points li .tick {
+    flex: 0 0 auto;
+    margin-top: 9px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent-light);
+  }
+  /* The li is a flex container, so an inline <span class="mono"> or <em> left loose in the
+     text becomes a sibling flex item and picks up the 16px gap on both sides. Every point
+     keeps its text in one .t. */
+  .points li .t { flex: 1 1 auto; }
+
+  /* Right-hand panel shared by the ladder, timeline, facade and provider slides */
+  .panel {
+    position: absolute;
+    top: 50%;
+    left: 900px;
+    right: 130px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* ---- the media-query ladder ------------------------------------------ */
+  .ladder { display: flex; flex-direction: column; gap: 14px; }
+  .rung {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    padding: 22px 32px;
+    border-radius: 14px;
+    background: rgba(33, 39, 57, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .rung .bp { flex: 0 0 96px; font-size: 27px; color: var(--sky); text-align: right; }
+  .rung .q { flex: 1 1 auto; font-size: 21px; color: rgba(241, 242, 246, 0.42); }
+  .rung .h { flex: 0 0 auto; font-size: 28px; color: var(--off-white); }
+  .rung .n {
+    flex: 0 0 168px;
+    text-align: right;
+    font-size: 20px;
+    white-space: nowrap;
+    color: rgba(241, 242, 246, 0.3);
+  }
+  .rung.waiting { border-style: dashed; background: rgba(33, 39, 57, 0.3); }
+  .rung.waiting .bp, .rung.waiting .h { color: rgba(241, 242, 246, 0.28); }
+
+  /* ---- what loads when -------------------------------------------------- */
+  .rows { display: flex; flex-direction: column; gap: 18px; }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    padding: 28px 34px;
+    border-radius: 16px;
+    background: rgba(33, 39, 57, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .row .pos { flex: 0 0 62px; font-size: 24px; color: rgba(241, 242, 246, 0.3); }
+  .row .what { flex: 1 1 auto; font-size: 26px; color: rgba(241, 242, 246, 0.78); white-space: nowrap; }
+  .row .state {
+    flex: 0 0 auto;
+    font-size: 19px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(241, 242, 246, 0.4);
+  }
+  .row.eager { border-color: rgba(115, 134, 220, 0.5); background: rgba(59, 75, 154, 0.2); }
+  .row.eager .what { color: var(--off-white); font-weight: 600; }
+  .row.eager .state { color: var(--accent-light); }
+  .row.lifted { border-style: dashed; }
+  .row.lifted .state { color: var(--sky); }
+
+  /* ---- the facade comparison -------------------------------------------- */
+  .weigh { display: flex; flex-direction: column; gap: 24px; }
+  .side {
+    padding: 40px 40px;
+    border-radius: 18px;
+    background: rgba(33, 39, 57, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .side .chip {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 18px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(241, 242, 246, 0.4);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .side .where { font-size: 32px; font-weight: 600; color: var(--off-white); margin-bottom: 16px; }
+  .side .what { font-size: 23px; line-height: 1.5; color: rgba(241, 242, 246, 0.5); }
+  .side.after { border-color: rgba(115, 134, 220, 0.5); background: rgba(59, 75, 154, 0.18); }
+  .side.after .chip { color: var(--accent-light); background: rgba(59, 75, 154, 0.3); }
+  .side.after .what { color: rgba(241, 242, 246, 0.66); }
+
+  .note {
+    font-size: 24px;
+    line-height: 1.5;
+    color: rgba(241, 242, 246, 0.45);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* ---- the provider shelf ------------------------------------------------ */
+  .shelf { display: flex; flex-wrap: wrap; gap: 14px; }
+  .name {
+    padding: 15px 24px;
+    border-radius: 12px;
+    font-size: 25px;
+    color: rgba(241, 242, 246, 0.62);
+    background: rgba(33, 39, 57, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .name.script { border-style: dashed; color: var(--sky); }
+  .name.more { color: rgba(241, 242, 246, 0.3); border-color: transparent; background: none; }
+
+  /* ---- terminal --------------------------------------------------------- */
+  .term {
+    position: absolute;
+    top: 50%;
+    left: 900px;
+    right: -110px;
+    transform: translateY(-50%);
+    border-radius: 14px; overflow: hidden; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .term .chrome {
+    height: 44px;
+    background: #232838;
+    background-image:
+      radial-gradient(circle at 26px 22px, #ff5f57 6.5px, transparent 7px),
+      radial-gradient(circle at 52px 22px, #ffbd2e 6.5px, transparent 7px),
+      radial-gradient(circle at 78px 22px, #28ca42 6.5px, transparent 7px);
+  }
+  .term .body {
+    background: #0b0d15;
+    padding: 42px 44px;
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 24px;
+    line-height: 1.95;
+  }
+  .term .prompt { color: var(--accent-light); }
+  .term .cmd { color: var(--off-white); }
+  .term .out { color: rgba(241, 242, 246, 0.45); }
+  .term .ok { color: var(--green); }
+  .term .warn { color: var(--sky); }
+  .term .blank { display: block; height: 20px; }
+
+  /* ---- footer lockup --------------------------------------------------- */
+  .footer {
+    position: absolute;
+    left: 130px;
+    bottom: 62px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    color: rgba(241, 242, 246, 0.4);
+  }
+  .footer img { width: 40px; height: 40px; border-radius: 9px; }
+  .footer b { color: rgba(241, 242, 246, 0.72); font-weight: 600; }
+
+  /* Only render the requested slide when screenshotting */
+  body.single .slide { display: none; }
+  body.single .slide.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- 1 · Cover ============================================================ -->
+<section class="slide cover" data-n="1">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Craft CMS 5</div>
+      <h1 class="gradient-text">Bed</h1>
+      <p class="tagline">Every embed gets a&nbsp;bed.</p>
+      <p class="lede">Space reserved from real measurements, loading deferred until the embed is
+        wanted, connections warmed only for the ones that aren’t.</p>
+      <div class="badges">
+        <span class="badge price"><span class="dot"></span> Free &nbsp;·&nbsp; no editions</span>
+        <span class="badge">Craft 5.3+ · PHP 8.2+ · no outbound requests</span>
+      </div>
+    </div>
+    <div class="mark"><img src="assets/icon.svg" alt=""></div>
+  </div>
+</section>
+
+<!-- 2 · Measure, don't guess ============================================= -->
+<section class="slide statement" data-n="2">
+  <div class="inner">
+    <div class="eyebrow"><span class="rule"></span> The whole idea</div>
+    <div class="swap">
+      <span class="caption">How tall is a tweet?</span>
+      <span class="before mono">min-height: 400px;&nbsp; /* a guess */</span>
+      <span class="arrow"></span>
+      <span class="caption">Bed doesn’t answer that. It asks.</span>
+      <span class="after mono gradient-text">min-height: 623px;&nbsp; /* n=41 */</span>
+    </div>
+    <p class="lede">A guess that is too big leaves a hole; a guess that is too small still moves the
+      page. So a sampled fraction of visitors beacon back what the embeds settled to at their own
+      viewport width, and every later render reserves that.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Bed</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-bed</div>
+</section>
+
+<!-- 3 · Reserved space =================================================== -->
+<section class="slide feature" data-n="3">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Reserved space</div>
+      <h2>A ladder,<br>not a number</h2>
+      <p class="lede">An embed is not one height. It is one height per viewport width.</p>
+      <ul class="points">
+        <li><span class="tick"></span><span class="t">Seven fixed buckets — a bucket per pixel measures nothing</span></li>
+        <li><span class="tick"></span><span class="t">A known shape needs no measurement, just a <span class="mono">ratio</span></span></li>
+        <li><span class="tick"></span><span class="t">Widths nobody has visited stay unreserved, never guessed</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ladder">
+      <div class="rung"><span class="bp mono">360</span><span class="q mono">max-width:360px</span><span class="h mono">548px</span><span class="n">24 samples</span></div>
+      <div class="rung"><span class="bp mono">480</span><span class="q mono">361px – 480px</span><span class="h mono">550px</span><span class="n">31 samples</span></div>
+      <div class="rung"><span class="bp mono">768</span><span class="q mono">481px – 768px</span><span class="h mono">574px</span><span class="n">20 samples</span></div>
+      <div class="rung"><span class="bp mono">1024</span><span class="q mono">769px – 1024px</span><span class="h mono">602px</span><span class="n">26 samples</span></div>
+      <div class="rung"><span class="bp mono">1280</span><span class="q mono">1025px – 1280px</span><span class="h mono">623px</span><span class="n">41 samples</span></div>
+      <div class="rung"><span class="bp mono">1536</span><span class="q mono">1281px – 1536px</span><span class="h mono">623px</span><span class="n">22 samples</span></div>
+      <div class="rung waiting"><span class="bp mono">1920</span><span class="q mono">min-width:1537px</span><span class="h mono">—</span><span class="n">3 samples</span></div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Bed</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-bed</div>
+</section>
+
+<!-- 4 · Deferred loading ================================================= -->
+<section class="slide feature" data-n="4">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Deferred loading</div>
+      <h2>Lazy, except<br>at the top</h2>
+      <p class="lede">Below the fold, lazy costs a little bandwidth. At the top, it costs the
+        LCP.</p>
+      <ul class="points">
+        <li><span class="tick"></span><span class="t">A script embed’s loader tag is lifted out until it is wanted</span></li>
+        <li><span class="tick"></span><span class="t">Anything <em>measured</em> above the fold stays eager, at every width</span></li>
+        <li><span class="tick"></span><span class="t">A deferral only counts if the runtime is really on the page</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="rows">
+      <div class="row eager"><span class="pos mono">#1</span><span class="what">YouTube &nbsp;·&nbsp; above the fold on 4 of 5 widths</span><span class="state">Eager</span></div>
+      <div class="row"><span class="pos mono">#2</span><span class="what">Vimeo &nbsp;·&nbsp; 16:9, no measurement needed</span><span class="state">Lazy</span></div>
+      <div class="row lifted"><span class="pos mono">#3</span><span class="what">X / Twitter &nbsp;·&nbsp; widgets.js</span><span class="state">Script lifted</span></div>
+      <div class="row"><span class="pos mono">#4</span><span class="what">Spotify &nbsp;·&nbsp; measured 352px</span><span class="state">Lazy</span></div>
+      <div class="row lifted"><span class="pos mono">#5</span><span class="what">Instagram &nbsp;·&nbsp; embed.js</span><span class="state">Script lifted</span></div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Bed</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-bed</div>
+</section>
+
+<!-- 5 · Facades ========================================================== -->
+<section class="slide feature" data-n="5">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Facades</div>
+      <h2>Nobody has<br>pressed play</h2>
+      <p class="lede">A video player is a whole document, spent before anybody has decided to
+        watch.</p>
+      <ul class="points">
+        <li><span class="tick"></span><span class="t">A poster and a play button until somebody clicks it</span></li>
+        <li><span class="tick"></span><span class="t">Autoplay on the swap, so one click is still one click</span></li>
+        <li><span class="tick"></span><span class="t">Only posters needing no request of their own are eligible</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="weigh">
+      <div class="side">
+        <span class="chip">Without a facade</span>
+        <div class="where">The player arrives anyway</div>
+        <div class="what">An iframe document, its scripts, and a handful of third-party connections
+          — opened for every reader, including the ones who scroll past.</div>
+      </div>
+      <div class="side after">
+        <span class="chip">With a facade</span>
+        <div class="where">One image, or nothing at all</div>
+        <div class="what">The poster is derived from the URL, so building the facade costs no request
+          of its own. Turn <span class="mono">facadePosters</span> off and it is drawn from CSS
+          alone: a reader who never clicks makes no third-party request whatsoever.</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Bed</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-bed</div>
+</section>
+
+<!-- 6 · Providers ======================================================== -->
+<section class="slide feature" data-n="6">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> The registry</div>
+      <h2>Around sixty,<br>and then some</h2>
+      <p class="lede">Recognition buys the ratio, the hints and the facade. Everything else still
+        gets a bed.</p>
+      <ul class="points">
+        <li><span class="tick"></span><span class="t">Capped, deduped hints — a budget, and never a target</span></li>
+        <li><span class="tick"></span><span class="t">Dashed entries are script-driven; the loader is what defers</span></li>
+        <li><span class="tick"></span><span class="t">A description of what embeds look like, not a client</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="shelf">
+      <span class="name">YouTube</span><span class="name">Vimeo</span><span class="name">Loom</span>
+      <span class="name">Wistia</span><span class="name">Twitch</span><span class="name">Spotify</span>
+      <span class="name">SoundCloud</span><span class="name">Apple Music</span><span class="name">Bandcamp</span>
+      <span class="name">Google Maps</span><span class="name">Docs</span><span class="name">Calendar</span>
+      <span class="name">Calendly</span><span class="name">Typeform</span><span class="name">Airtable</span>
+      <span class="name">Figma</span><span class="name">Canva</span><span class="name">Miro</span>
+      <span class="name">CodePen</span><span class="name">CodeSandbox</span><span class="name">Datawrapper</span>
+      <span class="name">Flourish</span><span class="name">Tableau</span><span class="name">Issuu</span>
+      <span class="name script">X / Twitter</span><span class="name script">Instagram</span>
+      <span class="name script">TikTok</span><span class="name script">Bluesky</span>
+      <span class="name script">Mastodon</span><span class="name script">Reddit</span>
+      <span class="name more">+ thirty more</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Bed</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-bed</div>
+</section>
+
+<!-- 7 · Console ========================================================== -->
+<section class="slide feature" data-n="7">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> The console</div>
+      <h2>Show your<br>working</h2>
+      <p class="lede">A performance plugin that cannot be asked what it did is one you take on
+        faith.</p>
+      <ul class="points">
+        <li><span class="tick"></span><span class="t">Report what was measured, prune it, purge and start again</span></li>
+        <li><span class="tick"></span><span class="t">Ask what Bed makes of a URL before you paste it into a page</span></li>
+        <li><span class="tick"></span><span class="t">Aggregates only — a count, a sum, a maximum. No visitors</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="term">
+    <div class="chrome"></div>
+    <div class="body">
+      <div><span class="prompt">$</span> <span class="cmd">php craft bed/metrics/report</span></div>
+      <div class="out">&nbsp;&nbsp;Slots tracked &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="ok">1,204</span></div>
+      <div class="out">&nbsp;&nbsp;Samples collected &nbsp;&nbsp;&nbsp;&nbsp; 18,663</div>
+      <div class="out">&nbsp;&nbsp;Reserve strategy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mean</div>
+      <span class="blank"></span>
+      <div><span class="prompt">$</span> <span class="cmd">php craft bed/providers/match https://youtu.be/dQw4w9WgXcQ</span></div>
+      <div class="out">&nbsp;&nbsp;Kind &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; iframe</div>
+      <div class="out">&nbsp;&nbsp;Ratio &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="warn">16:9</span></div>
+      <div class="out">&nbsp;&nbsp;Preconnect &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; www.youtube.com, i.ytimg.com</div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Bed</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-bed</div>
+</section>
+
+<script>
+  var n = new URLSearchParams(location.search).get('s');
+  if (n) {
+    document.body.classList.add('single');
+    var el = document.querySelector('.slide[data-n="' + n + '"]');
+    if (el) el.classList.add('active');
+  }
+</script>
+</body>
+</html>
