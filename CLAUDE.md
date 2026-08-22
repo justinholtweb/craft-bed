@@ -103,6 +103,71 @@ the fold.
 
 See also `[[craft-plugin-gotchas]]` in the shared memory for family-wide traps.
 
+## The icon
+
+`src/icon.svg` is a bed in side elevation — accent `#3B4B9A`, mark in `#FEFEFE`, on the family's
+rounded tile (`rx="22.44"`).
+
+The pillow is **punched out of** the mattress with `fill-rule="evenodd"` rather than drawn in a
+second colour, so the whole mark is one white mass and cannot turn to mud at 32px. Headboard,
+mattress and feet are **separate elements on purpose**: under evenodd, two overlapping subpaths of
+one path cancel each other out, and the headboard would punch a notch through the mattress exactly
+where the two meet. Separate elements simply union.
+
+`src/icon-mask.svg` is the same geometry without the tile, for Craft's control-panel nav.
+
+Three copies exist and all three have to move together: `src/icon.svg`, `promos/assets/icon.svg`,
+and `justinholt/web/images/plugins/bed.svg` — followed by `ddev craft index-assets/all`, or the
+page import relates no logo at all and "succeeds".
+
+## Plugin Store promos
+
+`promos/` renders the seven 1920×1080 marketing images for the Plugin Store listing:
+
+```sh
+./promos/build.sh          # all slides
+./promos/build.sh "2 5"    # just those two
+```
+
+They live **in this repo**, not in a website repo — plugin marketing sites are pages inside the
+justinholt.com install now, and the promos advertise the plugin rather than the page.
+
+Three things learned building the deck:
+
+- **The watermark is an outline, not the filled mark.** Filled, the bed is a wide slab with one
+  small hole in it, and at 1180px across a slide it reads as a hard-edged grey box laid over the
+  artwork. Same trap as Abacus's frame bars, Awesemo's chest box and Bandage's plaster: strip the
+  mass, keep the line.
+- **`.points li` is a flex container.** An inline `<span class="mono">` or `<em>` left loose in the
+  text becomes a *sibling flex item* and picks up the 16px gap on both sides. Every point keeps its
+  text in one `<span class="t">`.
+- **The copy column has to fit beside the panel *and* above the footer.** The panel starts at
+  `left: 900px` and the copy column is 780px, so a bullet that wraps to two lines both crowds the
+  panel and pushes the last point onto the footer lockup — and nothing clips, the text simply lands
+  on top. Two-line headings, three-or-four-line ledes, one line per bullet (~60 characters).
+
+Bed is free, so unlike the paid plugins in the family there is no price on the cover badge and no
+figure anywhere in the deck for a pricing change to strand.
+
+## The marketing site
+
+`justinholt.com/plugins/craft-bed`, a page inside that install — not a standalone project. The
+procedure and its traps live in the **`plugin-marketing-site` skill** in that repo; invoke it rather
+than working from memory.
+
+`docs/*.md` is the source of truth for the site's documentation, synced by
+`pluginsite/docs/sync craft-bed`. Front matter is required — a file without it is skipped, which is
+how `docs/plan.md` stays off the site.
+
+**Cross-document links in `docs/` must be absolute.** The site's docs sidebar links to
+trailing-slash URLs, so a bare relative `](configuration)` resolves *under* the current page and
+404s — even though the non-slashed URL answers fine when tested by hand. Craft's markdown gives
+headings no `id` either, so a `#fragment` link is dead too; name the section in bold instead.
+
+The page seed is `justinholt/scripts/seed/plugin-pages/craft-bed.json`. Everything the page says
+about behaviour has to stay true of `src/models/Settings.php` — the defaults are quoted on the
+marketing page and in `docs/configuration.md`, and nothing checks that they agree.
+
 ## Testing
 
 No local PHP on this Mac. Everything runs inside the plugin-testing container:

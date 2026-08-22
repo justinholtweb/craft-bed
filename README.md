@@ -213,6 +213,13 @@ comment is text, and text is left alone.
 It costs about **0.3 ms on a 33 KB page**, and a page with no embeds on it is rejected by a single
 pattern match before any of that happens.
 
+## Documentation
+
+Full documentation is at
+[justinholt.com/plugins/craft-bed/docs](https://justinholt.com/plugins/craft-bed/docs) —
+installation, every setting, Twig, troubleshooting and an FAQ.
+
 ## Licence
 
-Proprietary. See `LICENSE.md`.
+The Craft License. See `LICENSE.md`. Bed is free: no editions, no licence key, and no licensing
+code in the plugin.
