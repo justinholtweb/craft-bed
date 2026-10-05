@@ -61,6 +61,11 @@ class Install extends Migration
                 'heightSum' => $this->bigInteger()->notNull()->defaultValue(0),
 
                 'heightMax' => $this->integer()->notNull()->defaultValue(0),
+
+                // The heights themselves, up to the sample target, so the reservation can be a
+                // median rather than a mean. Numbers only — nothing about who sent them.
+                'heights' => $this->text(),
+
                 'aboveFold' => $this->integer()->notNull()->defaultValue(0),
                 'dateCreated' => $this->dateTime()->notNull(),
                 'dateUpdated' => $this->dateTime()->notNull(),

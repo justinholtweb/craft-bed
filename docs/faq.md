@@ -22,9 +22,13 @@ going to use.
 
 ## What does it store about my visitors?
 
-Nothing that identifies one. A measurement row is an aggregate: a count of samples, a sum of
-heights, the tallest seen, and a tally of how often the embed started above the fold — per slot, per
-viewport bucket.
+Nothing that identifies one. A measurement row is an aggregate: a count of samples, the heights
+measured (numbers only, up to the sample target), the tallest seen, and a tally of how often the
+embed started above the fold — per slot, per viewport bucket.
+
+To count each visitor once per slot, Bed keeps a cache entry for a day keyed on a **hash** of the
+connecting address and the slot. It is never written to the database, holds no address, and
+expires on its own.
 
 No address, no user agent, no session, no URL taken from the client, no cookie, no localStorage. The
 page tells the server which slots are on it, and the server already knew, because the page's token
@@ -49,9 +53,11 @@ What makes it safe is not a header. The page carries a token signed with `Securi
 same primitive behind Craft's own CSRF token, naming the site, the page and the exact list of slots.
 A client can only report on embeds that were on a page it was actually served, and it cannot invent
 a provider or a URI. Every number is clamped and every viewport width is snapped to a bucket on the
-server, so the worst a valid-but-dishonest report can do is drag a mean around inside a sane range.
-On top of that: a per-address rate limit, a hard row cap on the ledger, and a slot that stops
-accepting samples once it has enough.
+server, and a report many times taller than the viewport is wide is dropped. Each visitor counts
+once per slot, and the reserved height is a median, so moving it takes more than half the samples
+from as many different visitors — one dishonest visitor cannot. On top of that: a per-address rate
+limit under a site-wide ceiling, a hard row cap on the ledger, and a slot that stops accepting
+samples once it has enough.
 
 ## Does it write to the database on every page view?
 

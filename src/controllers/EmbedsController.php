@@ -4,7 +4,6 @@ namespace justinholtweb\bed\controllers;
 
 use Craft;
 use craft\db\Query;
-use craft\helpers\Cp;
 use craft\web\Controller;
 use justinholtweb\bed\models\Settings;
 use justinholtweb\bed\Plugin;

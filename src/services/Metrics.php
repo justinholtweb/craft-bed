@@ -5,6 +5,7 @@ namespace justinholtweb\bed\services;
 use Craft;
 use craft\base\Component;
 use craft\helpers\Json;
+use justinholtweb\bed\helpers\RateLimit;
 use justinholtweb\bed\models\EmbedNode;
 use justinholtweb\bed\models\Settings;
 use justinholtweb\bed\Plugin;
@@ -40,6 +41,12 @@ class Metrics extends Component
 
     /** Nothing on a web page is 20,000 pixels tall, and anything claiming to be is not measuring. */
     public const MAX_HEIGHT = 20000;
+
+    /** The tallest a report may be, as a multiple of the viewport width it was measured at. */
+    public const MAX_HEIGHT_PER_WIDTH = 10;
+
+    /** How long one visitor's sample for a slot holds their place. */
+    public const VISITOR_TTL = 86400;
 
     /**
      * What Bed knows about the slots on a page.
@@ -183,10 +190,13 @@ class Metrics extends Component
      * Folds a batch of reported measurements into the ledger.
      *
      * @param array<int, array<string, mixed>> $measurements Each `{slot, height, above}`.
+     * @param string|null $visitor Who sent it, for the one-sample-per-visitor rule; the connecting
+     *                             address when null, which is what a beacon is.
      * @return int How many were actually recorded.
      */
-    public function collect(string $token, int $viewportWidth, array $measurements): int
+    public function collect(string $token, int $viewportWidth, array $measurements, ?string $visitor = null): int
     {
+        $visitor ??= RateLimit::client();
         $settings = Plugin::getInstance()->getSettings();
 
         if (!$settings->enabled || !$settings->collectMetrics) {
@@ -225,7 +235,9 @@ class Metrics extends Component
 
             $height = (int)round((float)($measurement['height'] ?? 0));
 
-            if ($height < 1 || $height > self::MAX_HEIGHT) {
+            // A report many times taller than the viewport is wide is not a measurement of an
+            // embed. Real ones — a long thread on a phone — stay well inside this.
+            if ($height < 1 || $height > self::MAX_HEIGHT || $height > $viewportWidth * self::MAX_HEIGHT_PER_WIDTH) {
                 continue;
             }
 
@@ -246,6 +258,14 @@ class Metrics extends Component
                 continue;
             }
 
+            // One sample per visitor per slot per width. Without this one visitor could send the
+            // whole sample target themselves — under the rate limit — and fix the reservation at
+            // whatever they liked. Kept in the cache for a day, keyed on a hash of the connecting
+            // address: nothing per-visitor reaches the database.
+            if (!$this->firstFromVisitor($visitor, $slotId, $breakpoint)) {
+                continue;
+            }
+
             $ledger->record($slotId, $breakpoint, $height, !empty($measurement['above']));
             $recorded++;
         }
@@ -255,6 +275,19 @@ class Metrics extends Component
         }
 
         return $recorded;
+    }
+
+    /**
+     * Whether this is the first sample this visitor has sent for this slot at this width.
+     *
+     * `add()` is atomic where the cache supports it, so two beacons in flight from one visitor
+     * still only count once.
+     */
+    private function firstFromVisitor(string $visitor, int $slotId, int $breakpoint): bool
+    {
+        $key = 'bed:sampled:' . sha1("$visitor|$slotId|$breakpoint");
+
+        return Craft::$app->getCache()->add($key, 1, self::VISITOR_TTL);
     }
 
     /**

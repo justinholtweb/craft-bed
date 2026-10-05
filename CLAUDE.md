@@ -63,7 +63,19 @@ one `preg_match` before any of it.
 ### Tables
 
 `bed_slots` (unique on `siteId` + `slotKey`; a slot is one page, one position, one embed) and
-`bed_metrics` (unique on `slotId` + `breakpoint`; aggregates only, cascading key).
+`bed_metrics` (unique on `slotId` + `breakpoint`; aggregates plus the `heights` list — numbers
+only, capped at the sample target, appended under a mutex — cascading key).
+
+### The beacon is public, so one visitor must not decide a reservation (5.0.1)
+
+- **One sample per visitor per slot per bucket** — `Metrics::firstFromVisitor()`, a cache `add()`
+  keyed on a hash of `helpers\RateLimit::client()` (the connecting address; forwarded only with real
+  `trustedHosts`) for a day. Never the database. `collect()` takes an explicit `$visitor` for tests.
+- **Median, not mean** — `Ledger::reserveHeight()`: `mean` is really the median; `max` is the tallest
+  within 1.5× the median. Rows from before 5.0.1 have no list and keep the old arithmetic.
+- A report over `MAX_HEIGHT_PER_WIDTH` (10) × the viewport width is dropped.
+- The beacon rate limit is `RateLimit::allow('collect', …)` — per address, under a 20× global
+  ceiling, under a lock.
 
 `embedKey` is *what* is embedded; `slotKey` is *where*. That split is what lets the ledger say
 "this tweet measures 620px" while still knowing only one of the three places it appears is above
@@ -174,6 +186,8 @@ No local PHP on this Mac. Everything runs inside the plugin-testing container:
 
 ```sh
 docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-bed/tests/integration/checks.php   # 85 checks
+docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-bed/tests/integration/security.php # 8: beacon poisoning, median, rate limit over HTTP
+docker exec -w /sites/craft-bed ddev-phpstan-runner-web bash -c 'vendor/bin/phpstan analyse --memory-limit=1G && vendor/bin/ecs check'
 docker exec ddev-plugin-testing-web bash -c 'find /var/www/craft-bed/src -name "*.php" -print0 | xargs -0 -n1 php -l'
 ```
 

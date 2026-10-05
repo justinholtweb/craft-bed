@@ -33,10 +33,11 @@ a site that would rather opt in field by field than filter whole pages.
 
 **Reserved height** picks which measurement becomes the reserved height once a slot has samples:
 
-- `mean` — the average of what was measured. Shifts a little in both directions, and is the better
-  default.
-- `max` — the tallest height ever measured. Never shifts down, but leaves whitespace under short
-  embeds.
+- `mean` — the typical measured height: the **median** of the samples, so it shifts a little in both
+  directions and one wild report cannot move it. The better default. (The setting keeps its old
+  name; until 5.0.1 it was a true mean, and one visitor could drag it anywhere.)
+- `max` — the tallest height measured that is within half again of the median. Rarely shifts down,
+  but leaves whitespace under short embeds; a single absurd report does not count.
 
 **Use the embed's own dimensions** turns `width` and `height` attributes into an `aspect-ratio` box.
 It costs nothing, needs no measurement, and is why a Vimeo embed is correct on its very first
@@ -108,7 +109,8 @@ and expensive to collect from everybody. On a quiet site, or in development, tur
 warm the ledger in an afternoon; on a busy one, `0.1` fills a bucket in a morning.
 
 **Samples wanted** is how many samples a slot needs at a bucket before Bed stops asking. Twenty is
-enough for a mean to be a measurement rather than the last visitor's window.
+enough for a median to be a measurement rather than the last visitor's window. Each visitor counts
+**once** per slot per bucket, so twenty samples means twenty visitors.
 
 **Collection token lifetime** is longer than you would pick for a session — seven days — because the
 page carrying the token may sit in a full-page cache for a while before anybody loads it.
@@ -118,7 +120,8 @@ deleted from a page last spring is not a measurement any more. Craft's garbage c
 prune.
 
 **Row cap** and **Beacons per minute** are the two limits that make a public endpoint safe to leave
-open. A site with a million URLs and an embed on each one should stop collecting, not fill a disk.
+open. Beacons per minute is per connecting address, under a site-wide ceiling of twenty times that;
+`X-Forwarded-For` only counts once Craft's `trustedHosts` names your proxies. A site with a million URLs and an embed on each one should stop collecting, not fill a disk.
 
 ## Markup hygiene
 

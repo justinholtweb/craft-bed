@@ -1,7 +1,7 @@
 {
     "name": "justinholtweb/craft-bed",
     "description": "Every embed gets a bed — reserved space measured from real page views, loading deferred until it is wanted, and warmed connections for the ones that are wanted immediately.",
-    "version": "5.0.0",
+    "version": "5.0.1",
     "type": "craft-plugin",
     "keywords": [
         "craftcms",
@@ -56,5 +56,10 @@
         "documentationUrl": "https://justinholt.com/plugins/craft-bed/docs",
         "changelogUrl": "https://raw.githubusercontent.com/justinholtweb/craft-bed/main/CHANGELOG.md",
         "class": "justinholtweb\\bed\\Plugin"
+    },
+    "require-dev": {
+        "craftcms/ecs": "dev-main",
+        "craftcms/phpstan": "dev-main",
+        "phpstan/phpstan": "^1.12 || ^2.2"
     }
 }

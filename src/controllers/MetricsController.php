@@ -5,6 +5,7 @@ namespace justinholtweb\bed\controllers;
 use Craft;
 use craft\helpers\Json;
 use craft\web\Controller;
+use justinholtweb\bed\helpers\RateLimit;
 use justinholtweb\bed\Plugin;
 use Throwable;
 use yii\web\Response;
@@ -96,24 +97,13 @@ class MetricsController extends Controller
      * same count. The point is a ceiling on a flood, not an exact quota, and paying for a lock on
      * a write this cheap would cost more than the write.
      */
+    /**
+     * Per address, under a site-wide ceiling, counted under a lock — helpers\RateLimit. Before
+     * 5.0.1 this keyed on `getUserIP()`, which believes any `X-Forwarded-For`, so a client could
+     * name a fresh address with every beacon.
+     */
     private function withinRateLimit(int $perMinute): bool
     {
-        $ip = Craft::$app->getRequest()->getUserIP();
-
-        if ($ip === null) {
-            return true;
-        }
-
-        $cache = Craft::$app->getCache();
-        $key = 'bed:collect:' . sha1($ip);
-        $count = (int)$cache->get($key);
-
-        if ($count >= $perMinute) {
-            return false;
-        }
-
-        $cache->set($key, $count + 1, 60);
-
-        return true;
+        return RateLimit::allow('collect', $perMinute);
     }
 }

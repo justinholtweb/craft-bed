@@ -1,5 +1,31 @@
 # Release Notes for Bed
 
+## 5.0.1 — 2026-10-05
+
+### Security
+
+- **One visitor could fix how much room an embed got, for good.** The beacon endpoint is public by
+  design, so anyone could take a signed token from a public page and send the whole sample target
+  themselves — twenty beacons, inside the rate limit — all reporting 20,000 px. The reservation was
+  the mean of the samples and collection then stopped, so the embed carried a 20,000 px gap until an
+  admin purged it. Now each visitor counts **once** per slot per viewport bucket, the reservation is
+  the **median** of the measured heights (the `max` strategy takes the tallest within half again of
+  the median), and a report many times taller than the viewport is wide is dropped.
+- **The beacon rate limit believed any `X-Forwarded-For`**, so a client could name a fresh address
+  with every beacon, and it counted without a lock. It now keys on the connecting address (the
+  forwarded one only when `trustedHosts` names your proxies), counts under a lock, and sits under a
+  site-wide ceiling.
+
+Slots measured before this release keep their old reservation until they are re-measured. If a
+page shows an embed with a gap far taller than it should be, `php craft bed/metrics/purge` (or the
+Clear measurements screen) starts it over.
+
+### Changed
+
+- The measured heights are kept per slot and bucket (numbers only, up to the sample target) — a
+  migration adds the column.
+- PHPStan and ECS configuration.
+
 ## 5.0.0
 
 Initial release.

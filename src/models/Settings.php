@@ -25,10 +25,13 @@ class Settings extends Model
      */
     public const BREAKPOINTS = [360, 480, 768, 1024, 1280, 1536, 1920];
 
-    /** Reserve the mean measured height. */
+    /**
+     * Reserve the typical measured height — the median since 5.0.1, so one wild report cannot move
+     * it. The value keeps its old name so stored settings still mean the same choice.
+     */
     public const RESERVE_MEAN = 'mean';
 
-    /** Reserve the tallest height ever measured. */
+    /** Reserve the tallest measured height within half again of the median. */
     public const RESERVE_MAX = 'max';
 
     /**
@@ -51,9 +54,11 @@ class Settings extends Model
     public bool $reserveSpace = true;
 
     /**
-     * @var string Which measurement becomes the reserved height — the mean of what was measured,
-     *             or the tallest. `mean` shifts a little in both directions and is the better
-     *             default; `max` never shifts down but leaves whitespace under short embeds.
+     * @var string Which measurement becomes the reserved height — the typical one (the median,
+     *             though the value is still `mean`) or the tallest. `mean` shifts a little in both
+     *             directions and is the better default; `max` rarely shifts down but leaves
+     *             whitespace under short embeds. Neither can be decided by one visitor — see
+     *             Ledger::reserveHeight().
      */
     public string $reserveStrategy = self::RESERVE_MEAN;
 

@@ -146,6 +146,81 @@ class Ledger extends Component
             ['samples' => new \yii\db\Expression('[[samples]] + 1'), 'lastSeen' => $now, 'dateUpdated' => $now],
             ['id' => $slotId],
         )->execute();
+
+        $this->appendHeight($slotId, $breakpoint, $height);
+    }
+
+    /**
+     * Adds a height to the row's list, up to the sample target.
+     *
+     * Read-modify-write, so under a mutex: two beacons for one slot at once must not drop one.
+     * A busy lock skips the height rather than queueing — the counters above are already right,
+     * and a list one short is still a fair sample.
+     */
+    private function appendHeight(int $slotId, int $breakpoint, int $height): void
+    {
+        $mutex = Craft::$app->getMutex();
+        $lock = "bed:heights:$slotId:$breakpoint";
+
+        if (!$mutex->acquire($lock, 2)) {
+            return;
+        }
+
+        try {
+            $where = ['slotId' => $slotId, 'breakpoint' => $breakpoint];
+            $stored = (new Query())->select(['heights'])->from(MetricRecord::TABLE)->where($where)->scalar();
+            $heights = is_string($stored) ? (json_decode($stored, true) ?: []) : [];
+            $limit = max(1, Plugin::getInstance()->getSettings()->sampleTarget);
+
+            if (count($heights) < $limit) {
+                $heights[] = $height;
+                Craft::$app->getDb()->createCommand()
+                    ->update(MetricRecord::TABLE, ['heights' => json_encode(array_values($heights))], $where)
+                    ->execute();
+            }
+        } finally {
+            $mutex->release($lock);
+        }
+    }
+
+    /**
+     * The height to reserve, from the measured heights.
+     *
+     * The median, not the mean: it takes more than half the samples — from as many visitors, since
+     * each counts once — to move it, where a mean moves as far as one bad sample likes. The "max"
+     * strategy takes the tallest sample within half again of the median, so an embed that is
+     * sometimes taller still gets room, but one absurd report does not decide the page.
+     *
+     * @param int[] $heights
+     */
+    public static function reserveHeight(array $heights, bool $useMax): int
+    {
+        $heights = array_values(array_filter(array_map('intval', $heights), static fn(int $h) => $h > 0));
+
+        if ($heights === []) {
+            return 0;
+        }
+
+        sort($heights);
+        $n = count($heights);
+        $median = $n % 2 === 1
+            ? $heights[intdiv($n, 2)]
+            : (int)round(($heights[$n / 2 - 1] + $heights[$n / 2]) / 2);
+
+        if (!$useMax) {
+            return $median;
+        }
+
+        $ceiling = $median * 1.5;
+        $max = $median;
+
+        foreach ($heights as $h) {
+            if ($h <= $ceiling && $h > $max) {
+                $max = $h;
+            }
+        }
+
+        return $max;
     }
 
     /**
@@ -172,6 +247,7 @@ class Ledger extends Component
                 'metrics.samples',
                 'metrics.heightSum',
                 'metrics.heightMax',
+                'metrics.heights',
                 'metrics.aboveFold',
             ])
             ->from(['slots' => SlotRecord::TABLE])
@@ -203,9 +279,12 @@ class Ledger extends Component
             }
 
             $breakpoint = (int)$row['breakpoint'];
-            $height = $useMax
-                ? (int)$row['heightMax']
-                : (int)round(((int)$row['heightSum']) / $samples);
+            // Rows measured since 5.0.1 carry their heights and are reserved by median. Older rows
+            // only have a sum and a max, and keep the old arithmetic until they are re-measured.
+            $list = is_string($row['heights'] ?? null) ? (json_decode($row['heights'], true) ?: []) : [];
+            $height = $list !== []
+                ? self::reserveHeight($list, $useMax)
+                : ($useMax ? (int)$row['heightMax'] : (int)round(((int)$row['heightSum']) / $samples));
 
             if ($height > 0) {
                 $out[$key]['heights'][$breakpoint] = $height;

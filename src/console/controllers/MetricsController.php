@@ -52,7 +52,7 @@ class MetricsController extends Controller
 
             foreach ($stats['providers'] as $handle => $count) {
                 $provider = $plugin->providers->byHandle($handle);
-                $this->stdout(sprintf("    %-24s %s\n", $provider?->name ?? $handle, number_format($count)));
+                $this->stdout(sprintf("    %-24s %s\n", $provider->name ?? $handle, number_format($count)));
             }
         }
 

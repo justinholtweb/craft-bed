@@ -726,9 +726,11 @@ check('a slot stops accepting samples once it has enough', function() use ($plug
     $nodes[0]->slotKey = str_repeat('7', 40);
     $token = $plugin->metrics->token($siteId, '/__bed-checks/full', $nodes);
 
-    $first = $plugin->metrics->collect($token, 800, [['slot' => str_repeat('7', 40), 'height' => 100]]);
-    $second = $plugin->metrics->collect($token, 800, [['slot' => str_repeat('7', 40), 'height' => 100]]);
-    $third = $plugin->metrics->collect($token, 800, [['slot' => str_repeat('7', 40), 'height' => 100]]);
+    // Three different visitors: since 5.0.1 one visitor only ever counts once per slot.
+    $run = bin2hex(random_bytes(4));
+    $first = $plugin->metrics->collect($token, 800, [['slot' => str_repeat('7', 40), 'height' => 100]], "a$run");
+    $second = $plugin->metrics->collect($token, 800, [['slot' => str_repeat('7', 40), 'height' => 100]], "b$run");
+    $third = $plugin->metrics->collect($token, 800, [['slot' => str_repeat('7', 40), 'height' => 100]], "c$run");
 
     $settings->sampleTarget = $original['sampleTarget'];
 
