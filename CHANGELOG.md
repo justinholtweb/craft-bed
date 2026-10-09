@@ -1,7 +1,6 @@
 # Release Notes for Bed
 
-## Unreleased
-
+## 5.1.0 — 2026-10-09
 ### Added
 
 - **Embeds can wait for consent.** List providers under **Require consent for** (`consentProviders`,
