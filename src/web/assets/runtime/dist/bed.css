@@ -112,6 +112,85 @@
     }
 }
 
+/* ---------------------------------------------------------------- held for consent */
+
+/*
+ * A held embed shows a notice in its place. Inside a box with a known shape the notice fills the
+ * box, so releasing the embed shifts nothing; elsewhere it sits in the flow above the embed's own
+ * fallback content. `data-bed-consent` is `pending` (not asked yet), `denied`, `granted` or
+ * `loaded` (one embed, on a click) — hooks for your own CSS.
+ */
+.bed-consent {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.75em;
+    padding: 1.25em;
+    /* Translucent greys rather than colours, so the notice sits on a light or a dark page alike. */
+    background: rgba(127, 127, 127, 0.12);
+    color: inherit;
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    text-align: center;
+}
+
+.bed--ratio > .bed-consent {
+    position: absolute;
+    inset: 0;
+    overflow: auto;
+}
+
+.bed--script > .bed-consent {
+    margin-bottom: 0.75em;
+}
+
+.bed-consent__text,
+.bed-consent__actions {
+    margin: 0;
+}
+
+.bed-consent__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5em 1em;
+}
+
+.bed-consent__load,
+.bed-consent__manage {
+    margin: 0;
+    padding: 0.5em 1em;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+
+.bed-consent__load {
+    font-weight: 600;
+}
+
+.bed-consent__load:focus-visible,
+.bed-consent__manage:focus-visible,
+.bed-consent__link:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+}
+
+.bed-consent__link {
+    color: inherit;
+}
+
+.bed-consent [hidden] {
+    display: none;
+}
+
 /*
  * The runtime stamps `data-bed-loaded` once an embed has arrived. There is deliberately no rule
  * attached to it here: releasing the reserved height at that moment would let a short embed pull

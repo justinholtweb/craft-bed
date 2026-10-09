@@ -59,6 +59,8 @@ one `preg_match` before any of it.
 - `metrics` — reservations, token signing and verification, accepting beacons.
 - `ledger` — the only thing that reads or writes `bed_slots` / `bed_metrics`.
 - `hints` — providers in, a capped and deduped set of `<link rel>` out.
+- `consent` — which embeds are held for consent and where the answer comes from (Toss or
+  `consentSource`). Never reads the visitor's answer.
 
 ### Tables
 
@@ -80,6 +82,31 @@ only, capped at the sample target, appended under a mutex — cascading key).
 `embedKey` is *what* is embedded; `slotKey` is *where*. That split is what lets the ledger say
 "this tweet measures 620px" while still knowing only one of the three places it appears is above
 the fold.
+
+### Consent-gated embeds (Toss consumer)
+
+`consentProviders` (provider handle → category, `*` for every recognised provider; `generic`/`media`
+only by name) holds embeds behind a `.bed-consent` notice. Toss's `docs/consent-api.md` is the
+contract; craft-tape is the sibling consumer.
+
+- **Cache-safe by construction.** The server never reads the visitor's answer. Every listed embed is
+  held for everybody; the only server-side inputs are settings and `Consent::tossIsActive()`, both
+  the same for every visitor. `consent.php` asserts byte-identical output across granted/refused/
+  undecided Toss states. Never "optimise" this by releasing on the server for a visitor who granted.
+- **Toss first, guarded.** `Consent::tossIsActive()` asks `isPluginEnabled('toss')` before naming a
+  Toss class (phpstan ignores `justinholtweb\toss` for this), and it is the only file that names one
+  — a check enforces that. `deferToToss` (default on) is the way out. The browser reads
+  `window.Toss.onConsent()` / `toss:consent`, never Toss's cookie (it is signed).
+- **Three answers.** `null` (undecided) and `false` both hold, shown as `data-bed-consent="pending"`
+  vs `"denied"`. Released frames go back behind the notice on withdrawal; script embeds can't.
+- **Nothing third-party before consent.** Frames/media/facades (poster included) go into an inert
+  `<template data-bed-held>`; a held provider's loader script is lifted even with `deferScripts` off
+  (and removed with no runtime — consent fails closed); held providers get no resource hints; held
+  beds are never measured (they are the size of the notice).
+- **Eye's figure (`data-eye`) or `data-bed-consent-managed`** marks a region that already asks; nodes in
+  it get `EmbedNode::$consentManaged` and are never held.
+- Other sources live only in `bed.js` (`READERS`): Cookiebot, CookieYes, Tape (`window.tape.consent.get()`,
+  polled — it fires no event), a site cookie (polled), and `click`. `Bed.consent()` overrides any.
 
 ## Traps found while building this
 
@@ -187,6 +214,7 @@ No local PHP on this Mac. Everything runs inside the plugin-testing container:
 ```sh
 docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-bed/tests/integration/checks.php   # 85 checks
 docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-bed/tests/integration/security.php # 8: beacon poisoning, median, rate limit over HTTP
+docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-bed/tests/integration/consent.php  # 35: held markup, cache safety, Toss, settings
 docker exec -w /sites/craft-bed ddev-phpstan-runner-web bash -c 'vendor/bin/phpstan analyse --memory-limit=1G && vendor/bin/ecs check'
 docker exec ddev-plugin-testing-web bash -c 'find /var/www/craft-bed/src -name "*.php" -print0 | xargs -0 -n1 php -l'
 ```
@@ -210,6 +238,10 @@ render.
 scripted work, and the Bash tool's working directory persists between calls — `cd` to the repo
 explicitly. The harness is shared with other sessions and gets restarted from under you; wrap
 container commands in a retry loop.
+
+`tests/manual/bed-consent-demo.twig` is the consent counterpart: `?source=click|toss|cookie`, settings
+changed in memory for the request only. In a browser, `Bed.consent('marketing', true)` (or Toss's
+Accept with `?source=toss`) releases the frames and starts the tweet's loader.
 
 ## Coding conventions
 

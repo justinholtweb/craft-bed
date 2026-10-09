@@ -10,7 +10,8 @@ Bed lays a bed for each one. Space is reserved from heights measured on real pag
 is deferred until the embed is wanted, and connections are warmed only for the embeds that are
 wanted immediately.
 
-Free. Craft 5.3+, PHP 8.2+. No outbound requests, no third-party services, no build step.
+Free. Craft 5.3+, PHP 8.2+. No outbound requests, no third-party services, no build step. Embeds
+can wait for consent, from Toss or the consent platform you already have.
 
 Reference point: the WordPress *Embed Optimizer* plugin, and the *Optimization Detective* plugin
 it leans on for the measurement half. Bed does both halves itself, because a Craft site should not
@@ -73,6 +74,38 @@ still one click.
 Only providers whose poster can be worked out without asking them anything are eligible, so
 building the facade costs no request of its own. Turn `facadePosters` off and the facade is drawn
 from CSS alone: a reader who never clicks makes no third-party request at all.
+
+### Holds embeds until the visitor agrees
+
+List providers under **Require consent for** (`consentProviders`) and their embeds wait behind a
+short notice until the visitor allows the consent category they belong to — `marketing` for a
+YouTube player, `preferences` for a map, whatever you choose:
+
+```php
+// config/bed.php
+return [
+    'consentProviders' => ['youtube' => 'marketing', 'twitter' => 'marketing', 'googlemaps' => 'preferences'],
+];
+```
+
+Nothing third-party is fetched before then. The frame (or the facade, poster included) waits in an
+inert `<template>`, a script embed's loader script waits on the bed, and no resource hint is sent to
+a held provider. The notice offers **Load the embed** for a reader who wants just that one, and a
+link to the content at its source that works without JavaScript.
+
+The page is **identical for every visitor** — every listed embed is held — and the answer is read in
+the browser, so it is safe behind Blitz or a CDN. Where the answer comes from:
+
+- **[Toss](https://justinholt.com/plugins/craft-toss)**, the family's consent manager, whenever it is
+  installed with its cookie consent kit on. No setup: Bed follows `window.Toss` and the
+  `toss:consent` event, releases embeds the moment the visitor accepts, puts frames back if they
+  withdraw, and its **Cookie settings** button reopens Toss's panel. *Not decided yet* is not *no*:
+  the embed waits either way, and the bed says which (`data-bed-consent="pending"` or `"denied"`).
+- Otherwise `consentSource`: **Cookiebot**, **CookieYes**, **Tape**'s consent state, a cookie of your
+  own, or no platform at all — each embed loads on a click. Your own banner can always call
+  `Bed.consent('marketing', true)`.
+
+Nothing is listed by default, so nothing changes until you list something.
 
 ## The measurement loop
 
@@ -185,7 +218,8 @@ appearance entirely without changing anything about how the beds work:
 | `--bed-min` | the reserved height, on embeds whose height was measured |
 
 Classes: `.bed`, `.bed--{provider}`, `.bed--{iframe\|script\|media}`, `.bed--ratio`,
-`.bed--facade`. The runtime stamps `data-bed-loaded` on a bed once its embed has arrived — there is
+`.bed--facade`, `.bed--gated`, and `.bed-consent` for the notice on a held embed, whose state is in
+`data-bed-consent` (`pending`, `denied`, `granted`, or `loaded` after a click). The runtime stamps `data-bed-loaded` on a bed once its embed has arrived — there is
 deliberately no rule attached to it, because releasing the reserved height at that moment would let
 a short embed pull the page back up, and a layout shift is a layout shift whichever way it goes.
 

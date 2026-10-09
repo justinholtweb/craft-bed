@@ -52,6 +52,7 @@ class Scanner extends Component
         $nodes = [];
         $candidateScripts = [];
         $skipUntil = 0;
+        $managedUntil = 0;
         $count = count($tokens);
 
         for ($i = 0; $i < $count; $i++) {
@@ -77,6 +78,12 @@ class Scanner extends Component
                 continue;
             }
 
+            // An embed Eye rendered carries its own click-to-load consent. Bed still lays it a
+            // bed, but holding it behind a second notice would ask the reader twice.
+            if ($token['start'] >= $managedUntil && $this->managesOwnConsent($token['attrs'])) {
+                $managedUntil = Html::closingOffset($tokens, $i) ?? $token['end'];
+            }
+
             if ($this->isOptedOut($token['attrs'])) {
                 $skipUntil = Html::closingOffset($tokens, $i) ?? $token['end'];
                 continue;
@@ -88,6 +95,7 @@ class Scanner extends Component
                 continue;
             }
 
+            $node->consentManaged = $token['start'] < $managedUntil;
             $nodes[] = $node;
 
             // Nothing inside an embed is another embed as far as Bed is concerned. A second bed
@@ -232,6 +240,18 @@ class Scanner extends Component
         }
 
         return false;
+    }
+
+    /**
+     * Whether an element is a container that already asks for consent before loading what is in
+     * it. `data-eye` is Eye's embed figure; `data-bed-consent-managed` is the opt-out for anybody
+     * else's.
+     *
+     * @param array<string, string> $attrs
+     */
+    private function managesOwnConsent(array $attrs): bool
+    {
+        return array_key_exists('data-eye', $attrs) || array_key_exists('data-bed-consent-managed', $attrs);
     }
 
     // ------------------------------------------------------------------ loader scripts

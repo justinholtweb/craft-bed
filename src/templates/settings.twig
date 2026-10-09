@@ -149,6 +149,97 @@
 
 <hr>
 
+<h2>{{ 'Consent'|t('bed') }}</h2>
+
+<p class="light">{{ 'Hold embeds from the providers listed here behind a short notice until the visitor allows the category they belong to. The page is the same for every visitor — the answer is read in the browser — so it is safe behind a full-page cache.'|t('bed') }}</p>
+
+{% set categoryOptions = [
+    { value: 'marketing', label: 'Marketing'|t('bed') },
+    { value: 'analytics', label: 'Analytics'|t('bed') },
+    { value: 'preferences', label: 'Preferences'|t('bed') },
+] %}
+
+{{ forms.editableTableField({
+    label: 'Require consent for'|t('bed'),
+    instructions: 'Each provider, and the consent category its embeds wait for. “Every recognised provider” covers all of them at once; a provider listed by name overrides it.'|t('bed'),
+    id: 'consentProviders',
+    name: 'consentProviders',
+    cols: {
+        provider: { heading: 'Provider'|t('bed'), type: 'select', options: consentProviderOptions },
+        category: { heading: 'Category'|t('bed'), type: 'select', options: categoryOptions, width: '30%' },
+    },
+    rows: settings.consentProviders|map((category, provider) => { provider: provider, category: category })|values,
+    addRowLabel: 'Add a provider'|t('bed'),
+    allowAdd: true,
+    allowDelete: true,
+    allowReorder: false,
+    errors: settings.getErrors('consentProviders'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Use Toss for consent when it is on'|t('bed'),
+    instructions: 'When Toss’s cookie consent kit is switched on, held embeds wait for the visitor’s answer to Toss, and “Cookie settings” reopens Toss’s panel. The source below applies again as soon as Toss is off.'|t('bed'),
+    id: 'deferToToss',
+    name: 'deferToToss',
+    on: settings.deferToToss,
+    tip: tossActive
+        ? (settings.deferToToss ? 'Toss is the consent manager on this site.'|t('bed') : null)
+        : 'Toss isn’t installed, or its cookie consent kit is off, so the source below is in charge.'|t('bed'),
+    warning: tossActive and not settings.deferToToss
+        ? 'Toss’s consent kit is on, but Bed is ignoring it. Held embeds won’t follow the visitor’s answer to Toss.'|t('bed')
+        : null,
+}) }}
+
+{{ forms.selectField({
+    label: 'Consent source'|t('bed'),
+    instructions: 'Where the visitor’s answer comes from when Toss isn’t the consent manager. Your own banner can always call `Bed.consent(\'marketing\', true)`.'|t('bed'),
+    id: 'consentSource',
+    name: 'consentSource',
+    value: settings.consentSource,
+    options: consentSourceOptions,
+    errors: settings.getErrors('consentSource'),
+}) }}
+
+{{ forms.textField({
+    label: 'Consent cookie'|t('bed'),
+    instructions: 'For “A cookie of your own”: the cookie to read.'|t('bed'),
+    id: 'consentCookieName',
+    name: 'consentCookieName',
+    value: settings.consentCookieName,
+    code: true,
+    errors: settings.getErrors('consentCookieName'),
+}) }}
+
+{{ forms.textField({
+    label: 'Granted when the cookie contains'|t('bed'),
+    instructions: 'For “A cookie of your own”: the text the cookie’s value must contain for a category to count as granted. `{category}` is replaced by the category name.'|t('bed'),
+    id: 'consentCookieMatch',
+    name: 'consentCookieMatch',
+    value: settings.consentCookieMatch,
+    code: true,
+    errors: settings.getErrors('consentCookieMatch'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Offer a “Load the embed” button'|t('bed'),
+    instructions: 'Lets a reader load one held embed with a click, without changing their cookie choices. Off means only the consent platform can release anything.'|t('bed'),
+    id: 'consentClickToLoad',
+    name: 'consentClickToLoad',
+    on: settings.consentClickToLoad,
+}) }}
+
+{{ forms.textField({
+    label: 'Notice text'|t('bed'),
+    instructions: 'Shown in place of a held embed. `{provider}`, `{host}` and `{category}` are filled in. Leave it blank for Bed’s own wording.'|t('bed'),
+    id: 'consentMessage',
+    name: 'consentMessage',
+    value: settings.consentMessage,
+    placeholder: 'This embed loads content from {provider}, which may set {category} cookies.'|t('bed'),
+    errors: settings.getErrors('consentMessage'),
+}) }}
+
+<hr>
+
 <h2>{{ 'Measurement'|t('bed') }}</h2>
 
 <p class="light">{{ 'Reserving space for an embed whose height nobody knows is guesswork. Bed asks a sampled fraction of real visitors what the embed actually measured at their viewport width, and reserves that from then on. Nothing about a visitor is stored — a row is a count, a sum and a maximum.'|t('bed') }}</p>

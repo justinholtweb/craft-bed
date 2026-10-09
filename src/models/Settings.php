@@ -2,6 +2,7 @@
 
 namespace justinholtweb\bed\models;
 
+use Craft;
 use craft\base\Model;
 
 /**
@@ -124,6 +125,76 @@ class Settings extends Model
      */
     public bool $facadePosters = true;
 
+    // ------------------------------------------------------------------ consent
+
+    /** No consent platform: each held embed is loaded by a click, or by `Bed.consent()`. */
+    public const CONSENT_CLICK = 'click';
+
+    /** Cookiebot's `window.Cookiebot.consent`. */
+    public const CONSENT_COOKIEBOT = 'cookiebot';
+
+    /** CookieYes's `cookieyes-consent` cookie. */
+    public const CONSENT_COOKIEYES = 'cookieyes';
+
+    /** Tape's own consent state, `window.tape.consent.get()`. */
+    public const CONSENT_TAPE = 'tape';
+
+    /** A first-party cookie of the site's own. */
+    public const CONSENT_COOKIE = 'cookie';
+
+    /** The source used whenever Toss is the consent manager. Never stored as a setting. */
+    public const CONSENT_TOSS = 'toss';
+
+    /** The category names the family gates on — Toss's four. */
+    public const CONSENT_CATEGORIES = ['necessary', 'preferences', 'analytics', 'marketing'];
+
+    /** The provider key that stands for every recognised provider not listed by name. */
+    public const CONSENT_ALL = '*';
+
+    /**
+     * @var array<string, string> Providers whose embeds are held behind a consent notice, as
+     *      provider handle → consent category: `['youtube' => 'marketing', 'googlemaps' =>
+     *      'preferences']`. `*` stands for every recognised provider not listed by name; `generic`
+     *      and `media` (unrecognised frames, `<video>`/`<audio>`) only ever by name. Empty — the
+     *      default — holds nothing back.
+     */
+    public array $consentProviders = [];
+
+    /**
+     * @var string Where the visitor's answer comes from when Toss is not the consent manager. One
+     *             of the `CONSENT_*` source constants.
+     */
+    public string $consentSource = self::CONSENT_CLICK;
+
+    /**
+     * @var bool Take the answer from Toss whenever Toss is installed with its cookie consent kit on,
+     *           whatever `consentSource` says. On by default, which is what makes the pairing
+     *           zero-configuration.
+     */
+    public bool $deferToToss = true;
+
+    /**
+     * @var bool Whether a held embed offers a button that loads just that embed. A click on a
+     *           named, described embed is the reader asking for it; off means only the consent
+     *           platform can release anything.
+     */
+    public bool $consentClickToLoad = true;
+
+    /** @var string The cookie read when `consentSource` is `cookie`. */
+    public string $consentCookieName = '';
+
+    /**
+     * @var string What that cookie's value must contain for a category to count as granted.
+     *             `{category}` is replaced by the category name.
+     */
+    public string $consentCookieMatch = '{category}';
+
+    /**
+     * @var string The notice shown in place of a held embed. `{provider}`, `{host}` and
+     *             `{category}` are filled in. Empty uses Bed's own wording.
+     */
+    public string $consentMessage = '';
+
     // ------------------------------------------------------------------ measurement
 
     /**
@@ -216,6 +287,18 @@ class Settings extends Model
                 'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url',
             ]],
             [['facadeProviders', 'excludeUris'], 'validateList', 'skipOnEmpty' => false],
+            [['consentProviders'], 'validateConsentProviders', 'skipOnEmpty' => false],
+            [['consentSource'], 'in', 'range' => [
+                self::CONSENT_CLICK, self::CONSENT_COOKIEBOT, self::CONSENT_COOKIEYES, self::CONSENT_TAPE, self::CONSENT_COOKIE,
+            ]],
+            [['consentCookieName'], 'match', 'pattern' => '/^[A-Za-z0-9_.-]{1,128}$/', 'skipOnEmpty' => true],
+            // Not `required`: a required plugin setting blocks a fresh install, even conditionally.
+            [['consentCookieName'], function(string $attribute) {
+                if ($this->consentSource === self::CONSENT_COOKIE && trim($this->consentCookieName) === '') {
+                    $this->addError($attribute, Craft::t('bed', 'Name the cookie to read.'));
+                }
+            }, 'skipOnEmpty' => false],
+            [['consentCookieMatch', 'consentMessage'], 'string', 'max' => 500],
         ];
     }
 
@@ -248,6 +331,85 @@ class Settings extends Model
         }
 
         $this->$attribute = array_values(array_unique($out));
+    }
+
+    /**
+     * Normalises the consent list into `handle => category`.
+     *
+     * Three shapes arrive: a map from a config file, the editable table's rows from the settings
+     * form (`[['provider' => 'youtube', 'category' => 'marketing'], …]`), and a plain list of
+     * handles, which means `marketing` for each. A row with no provider is dropped, which is how
+     * a table row is deleted; a category that is not a plain name is an error rather than a
+     * silently ungated embed.
+     */
+    public function validateConsentProviders(string $attribute): void
+    {
+        $value = $this->$attribute;
+        $out = [];
+
+        foreach (is_array($value) ? $value : [] as $key => $row) {
+            if (is_array($row)) {
+                $handle = $row['provider'] ?? '';
+                $category = $row['category'] ?? '';
+            } elseif (is_int($key)) {
+                $handle = $row;
+                $category = 'marketing';
+            } else {
+                $handle = $key;
+                $category = $row;
+            }
+
+            $handle = is_string($handle) ? strtolower(trim($handle)) : '';
+            $category = is_string($category) ? trim($category) : '';
+
+            if ($handle === '') {
+                continue;
+            }
+
+            if ($category === '') {
+                $category = 'marketing';
+            }
+
+            if (!preg_match('/^(\*|[a-z0-9_-]{1,64})$/', $handle)) {
+                $this->addError($attribute, Craft::t('bed', '“{handle}” is not a provider handle.', ['handle' => $handle]));
+                continue;
+            }
+
+            if (!preg_match('/^[A-Za-z0-9_-]{1,64}$/', $category)) {
+                $this->addError($attribute, Craft::t('bed', '“{category}” is not a consent category name.', ['category' => $category]));
+                continue;
+            }
+
+            if ($category === 'necessary') {
+                // Necessary is always granted, so holding an embed behind it holds nothing back.
+                continue;
+            }
+
+            $out[$handle] = $category;
+        }
+
+        $this->$attribute = $out;
+    }
+
+    /**
+     * The consent category an embed from this provider is held behind, or null if it is not held.
+     *
+     * A provider listed by name wins over `*`. `generic` and `media` are never covered by `*`: an
+     * unrecognised frame or a `<video>` is as likely to be the site's own as anybody else's.
+     */
+    public function consentCategoryFor(string $handle): ?string
+    {
+        $map = $this->consentProviders;
+
+        if (isset($map[$handle])) {
+            return $map[$handle];
+        }
+
+        if (isset($map[self::CONSENT_ALL]) && !in_array($handle, ['generic', 'media'], true)) {
+            return $map[self::CONSENT_ALL];
+        }
+
+        return null;
     }
 
     /**

@@ -1,5 +1,28 @@
 # Release Notes for Bed
 
+## Unreleased
+
+### Added
+
+- **Embeds can wait for consent.** List providers under **Require consent for** (`consentProviders`,
+  provider → category, `*` for every recognised provider) and their embeds sit behind a short notice
+  until the visitor allows the category. Nothing third-party is fetched before then: frames, players
+  and facades (poster included) wait in an inert `<template>`, a script embed's loader script waits
+  on the bed, and held providers get no resource hints. The notice offers **Load the embed** for just
+  that one, a **Cookie settings** button where the platform can be reopened, and a link to the
+  content at its source. Nothing is listed by default.
+- **Toss is the consent manager when it is on.** With Toss installed and its cookie consent kit
+  switched on, Bed follows the visitor's answer to Toss (`window.Toss`, the `toss:consent` event),
+  releases embeds the moment they accept and puts frames back if they withdraw. Undecided is not
+  refused: both wait, and the bed says which. `deferToToss` (on by default) is the way out.
+- Without Toss, `consentSource` reads Cookiebot, CookieYes, Tape's consent state, a cookie of your
+  own, or nothing at all — readers click to load each embed. Your own banner can call
+  `Bed.consent('marketing', true)`.
+- The page stays identical for every visitor — the answer is read in the browser — so held embeds
+  are safe behind Blitz or a CDN.
+- Embeds inside Eye's own click-to-load figure, or any element marked `data-bed-consent-managed`, are
+  never asked about twice.
+
 ## 5.0.1 — 2026-10-05
 
 ### Security

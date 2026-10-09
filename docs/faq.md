@@ -37,12 +37,17 @@ is signed with Craft's own security key and names them.
 ## Do I need a cookie banner or a GDPR entry for it?
 
 Bed itself stores no personal data and sets no cookie, so it does not create a consent obligation of
-its own. It does not change your position on the embeds themselves — a YouTube player still does
-whatever YouTube does.
+its own. Left to itself it does not change your position on the embeds — a YouTube player still
+does whatever YouTube does.
 
 In fact facades usually improve it: with **Use the provider's poster image** turned off, a reader who
 never clicks makes **no third-party request at all**, which is a stronger privacy position than the
 page had before Bed was installed.
+
+And it can do the holding back for you. List a provider under **Require consent for** and its embeds
+wait behind a short notice until the visitor allows the category — read from Toss, Cookiebot,
+CookieYes, Tape or a cookie of your own — with nothing third-party fetched before then. See
+[Consent](https://justinholt.com/plugins/craft-bed/docs/consent).
 
 ## The collector is a public, CSRF-exempt endpoint. Is that safe?
 

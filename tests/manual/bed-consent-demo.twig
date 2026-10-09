@@ -1,0 +1,57 @@
+{#
+   Bed — consent end to end. Copy to the harness's `templates/` and open `/bed-consent-demo`.
+
+   Settings are changed in memory for this one request, so nothing reaches project config:
+
+     ?source=click    no consent platform: each held embed loads on a click (the default)
+     ?source=toss     Toss's cookie consent kit switched on, so Bed defers to Toss
+     ?source=cookie   a cookie of the site's own: `demo_consent` containing `marketing`
+
+   In the browser: nothing third-party is in the live DOM until consent (`template` contents are
+   inert), `Bed.consent('marketing', true)` or Toss's Accept releases the frames and starts the
+   tweet's loader, and withdrawing puts the frames back behind their notice.
+#}
+{% set bed = craft.app.plugins.getPlugin('bed') %}
+{% set source = craft.app.request.getQueryParam('source', 'click') %}
+{% do bed.settings.setAttributes({
+    consentProviders: { vimeo: 'marketing', youtube: 'marketing', twitter: 'marketing', googlemaps: 'preferences' },
+    consentSource: source == 'cookie' ? 'cookie' : 'click',
+    consentCookieName: 'demo_consent',
+    consentCookieMatch: '{category}',
+    deferToToss: true,
+    collectMetrics: false,
+}, false) %}
+{% set toss = craft.app.plugins.isPluginEnabled('toss') ? craft.app.plugins.getPlugin('toss') : null %}
+{% if toss %}
+    {% set kits = toss.settings.kits ?? {} %}
+    {% set kit = kits['cookie-consent'] ?? {} %}
+    {% do toss.settings.setAttributes({
+        kits: kits|merge({ 'cookie-consent': kit|merge({ enabled: source == 'toss' }) }),
+    }, false) %}
+{% endif %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Bed consent demo</title>
+</head>
+<body>
+    <h1>Bed consent demo — {{ source }}</h1>
+
+    <p>A Vimeo frame, held for marketing.</p>
+    <iframe src="https://player.vimeo.com/video/76979871" width="640" height="360" allowfullscreen></iframe>
+
+    <p>A YouTube facade, held for marketing poster and all.</p>
+    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="560" height="315" allowfullscreen></iframe>
+
+    <p>A map, held for preferences.</p>
+    <iframe src="https://www.google.com/maps/embed?pb=demo" width="600" height="450"></iframe>
+
+    <p>A tweet, whose loader waits for marketing.</p>
+    <blockquote class="twitter-tweet" cite="https://twitter.com/craftcms/status/1"><p>Hello</p></blockquote>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+    <p>An unlisted SoundCloud player, never held.</p>
+    <iframe src="https://w.soundcloud.com/player/?url=demo" width="100%" height="166"></iframe>
+</body>
+</html>

@@ -13,6 +13,7 @@ use craft\web\Response;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use justinholtweb\bed\models\Settings;
+use justinholtweb\bed\services\Consent;
 use justinholtweb\bed\services\Hints;
 use justinholtweb\bed\services\Ledger;
 use justinholtweb\bed\services\Metrics;
@@ -42,6 +43,7 @@ use yii\base\Event;
  * @property-read Metrics $metrics
  * @property-read Ledger $ledger
  * @property-read Hints $hints
+ * @property-read Consent $consent
  * @property-read Settings $settings
  *
  * @method Settings getSettings()
@@ -70,6 +72,7 @@ class Plugin extends BasePlugin
                 'metrics' => Metrics::class,
                 'ledger' => Ledger::class,
                 'hints' => Hints::class,
+                'consent' => Consent::class,
             ],
         ];
     }
@@ -119,6 +122,9 @@ class Plugin extends BasePlugin
             'plugin' => $this,
             'stats' => $this->ledger->stats(),
             'facadeOptions' => $this->facadeOptions(),
+            'consentProviderOptions' => $this->consentProviderOptions(),
+            'consentSourceOptions' => $this->consent->sourceOptions(),
+            'tossActive' => $this->consent->tossIsActive(),
         ]);
     }
 
@@ -129,6 +135,26 @@ class Plugin extends BasePlugin
 
         foreach ($this->providers->facadeCapable() as $provider) {
             $options[] = ['value' => $provider->handle, 'label' => $provider->name];
+        }
+
+        return $options;
+    }
+
+    /**
+     * Every provider an embed can be held for, plus the catch-alls, for the consent table.
+     *
+     * @return array<int, array<string, string>>
+     */
+    public function consentProviderOptions(): array
+    {
+        $options = [
+            ['value' => Settings::CONSENT_ALL, 'label' => Craft::t('bed', 'Every recognised provider')],
+            ['value' => Providers::GENERIC, 'label' => Craft::t('bed', 'Unrecognised frames')],
+            ['value' => Providers::MEDIA, 'label' => Craft::t('bed', 'Video and audio elements')],
+        ];
+
+        foreach ($this->providers->all() as $provider) {
+            $options[] = ['value' => $provider->handle, 'label' => $provider->name . ' (' . $provider->handle . ')'];
         }
 
         return $options;

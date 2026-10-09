@@ -45,6 +45,26 @@ class EmbedNode extends Model
     /** Where it is embedded — page, position and embed together. Assigned by the optimiser. */
     public string $slotKey = '';
 
+    /**
+     * Whether something around the embed already asks for consent before loading it — Eye's
+     * click-to-load figure. Such an embed is never held behind a second notice.
+     */
+    public bool $consentManaged = false;
+
+    /** The address a reader could open the embed at instead, if it has one worth linking to. */
+    public function sourceUrl(): ?string
+    {
+        foreach ([$this->src, $this->attrs['cite'] ?? '', $this->attrs['href'] ?? '', $this->attrs['data-href'] ?? ''] as $url) {
+            $url = trim($url);
+
+            if ($url !== '' && preg_match('#^https?://[^/\s]+#i', $url)) {
+                return $url;
+            }
+        }
+
+        return null;
+    }
+
     /** The intrinsic aspect ratio as `[width, height]`, from the element's own attributes. */
     public function intrinsicRatio(): ?array
     {

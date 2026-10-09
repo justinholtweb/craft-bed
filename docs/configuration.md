@@ -92,6 +92,26 @@ control panel, so building a facade never costs a request of its own.
 Turn **Use the provider's poster image** off and the facade is drawn from CSS alone — slower to look
 at, and a reader who never clicks makes no third-party request at all. This is the privacy setting.
 
+## Consent
+
+| Setting | Key | Default |
+| --- | --- | --- |
+| Require consent for | `consentProviders` | `[]` |
+| Use Toss for consent when it is on | `deferToToss` | `true` |
+| Consent source | `consentSource` | `click` |
+| Consent cookie | `consentCookieName` | `''` |
+| Granted when the cookie contains | `consentCookieMatch` | `{category}` |
+| Offer a "Load the embed" button | `consentClickToLoad` | `true` |
+| Notice text | `consentMessage` | `''` (Bed's own wording) |
+
+**Require consent for** maps a provider handle to the consent category its embeds wait for —
+`['youtube' => 'marketing', 'googlemaps' => 'preferences']`. `*` covers every recognised provider;
+`generic` and `media` only ever by name. Empty holds nothing back.
+
+When Toss is installed with its cookie consent kit on, Bed reads the visitor's answer from Toss and
+**Consent source** is set aside until Toss is off. The whole picture, including the notice and what
+each source reads, is in [Consent](https://justinholt.com/plugins/craft-bed/docs/consent).
+
 ## Measurement
 
 | Setting | Key | Default |
@@ -161,4 +181,5 @@ markup and CSS.
 ## Next
 
 - [Usage](https://justinholt.com/plugins/craft-bed/docs/usage) — Twig, opting out, styling, the console
+- [Consent](https://justinholt.com/plugins/craft-bed/docs/consent) — holding embeds until the visitor agrees
 - [Troubleshooting](https://justinholt.com/plugins/craft-bed/docs/troubleshooting) — when an embed is not getting a bed
